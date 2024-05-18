@@ -93,7 +93,7 @@ export function parseMapDataFromFile({
           resourceKey = "";
         } else if (currentKey === "info") {
           const keyValue = line.split(":");
-          const key = keyValue[0].trim();
+          const key = keyValue[0].trim().toLowerCase();
           const value = keyValue[1].trim();
           if (key === "rowcount" || key === "colcount") {
             parsedData[key] = parseInt(value, 10);
