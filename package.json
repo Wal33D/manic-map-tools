@@ -1,0 +1,32 @@
+{
+  "name": "manic-miners-tools",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "clean": "rimraf dist",
+    "build": "tsc",
+    "copy-assets": "copyfiles -u 1 ./assets/**/* ./dist",
+    "prep": "npm run clean && npm run build && npm run copy-assets",
+    "cleanMapFiles": "npm run prep && node dist/scripts/cleanMapFile.js",
+    "generateMapPNG": "npm run prep && node dist/scripts/generatePNG.js",
+    "mapIntegrityCheck": "npm run prep && node dist/scripts/mapIntegrityCheck.js",
+    "determineAVGMapSize": "npm run prep && node dist/scripts/averageMapSize.js",
+    "logMapDataStats": "npm run prep && node dist/scripts/logMapDataStats.js",
+    "minify": "npm run prep && node dist/scripts/minifyProject.js",
+    "start": "ts-node index.ts"
+  },
+  "author": "Waleed Judah",
+  "license": "MIT",
+  "description": "",
+  "dependencies": {
+    "canvas": "^2.11.2",
+    "chardet": "^2.0.0",
+    "dotenv": "^16.4.5"
+  },
+  "devDependencies": {
+    "@types/chardet": "^0.8.3",
+    "@types/dotenv": "^8.2.0",
+    "@types/node": "^20.12.12",
+    "copyfiles": "^2.4.1"
+  }
+}
