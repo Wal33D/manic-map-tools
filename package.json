@@ -3,14 +3,15 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "clean": "rimraf dist",
+    "resetdist": "rimraf dist",
     "build": "tsc",
     "copy-assets": "copyfiles -u 1 ./assets/**/* ./dist",
-    "prep": "npm run clean && npm run build && npm run copy-assets",
+    "prep": "npm run resetdist && npm run build && npm run copy-assets",
     "generate": "npm run prep && node dist/scripts/generatePNG.js",
     "check": "npm run prep && node dist/scripts/mapIntegrityCheck.js",
     "avg": "npm run prep && node dist/scripts/averageMapSize.js",
     "stats": "npm run prep && node dist/scripts/logMapDataStats.js",
+    "clean": "npm run prep && node dist/scripts/cleanMapFile.js",
     "minify": "npm run prep && node dist/scripts/minifyProject.js",
     "start": "ts-node index.ts"
   },

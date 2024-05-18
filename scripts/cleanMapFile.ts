@@ -13,9 +13,11 @@ const rl = readline.createInterface({
   output: process.stdout,
 });
 
-function cleanKey(key: string): string {
+function cleanKey(key: string, filePath: string): string {
   if (key.toLowerCase() === "rowcount" || key.toLowerCase() === "colcount") {
-    console.error(`[WARNING] Found key with uppercase letters: ${key}`);
+    console.error(
+      `[WARNING] Found key with uppercase letters: ${key} --> in file: ${filePath}`
+    );
     return key.toLowerCase();
   }
   return key;
@@ -35,7 +37,21 @@ const cleanMapFile = (filePath: string): void => {
 
     const cleanFileContent = (content: string): string => {
       const printableContent = content.replace(/[^\x20-\x7E\n\r]/g, "");
-      return printableContent.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+      const cleanedContent = printableContent
+        .replace(/\r\n/g, "\n")
+        .replace(/\r/g, "\n");
+      return cleanedContent
+        .split("\n")
+        .map((line) => {
+          const keyValue = line.split(":");
+          if (keyValue.length === 2) {
+            const key = keyValue[0].trim();
+            const value = keyValue[1].trim();
+            return `${cleanKey(key, filePath)}: ${value}`;
+          }
+          return line;
+        })
+        .join("\n");
     };
 
     const cleanedData = cleanFileContent(fileContent);
