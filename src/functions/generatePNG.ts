@@ -13,14 +13,20 @@ async function processImage(
   biome: string
 ) {
   let image = sharp(buffer).sharpen();
-  if (height * scale > width * scale) {
-    image = image.rotate(90);
-  }
 
-  image = await image.resize(frameSize - 2 * padding, frameSize - padding, {
+  // Resize the image first
+  const maxDimension = Math.max(height * scale, width * scale);
+  image = await image.resize({
+    width: width * scale > height * scale ? frameSize - 2 * padding : null,
+    height: height * scale >= width * scale ? frameSize - 2 * padding : null,
     fit: "inside",
     withoutEnlargement: true,
   });
+
+  // Rotate the image if the height is greater than the width
+  if (height * scale > width * scale) {
+    image = image.rotate(90);
+  }
 
   return image.extend({
     top: padding,
