@@ -8,38 +8,45 @@ async function processImage(
   height: number,
   width: number,
   scale: number,
-  frameSize: number,
-  padding: number,
+  frameWidth: number,
+  frameHeight: number,
   biome: string
 ) {
   let image = sharp(buffer).sharpen();
-  if (height * scale > width * scale) {
+  const orientation = width > height ? "landscape" : "portrait";
+
+  // Rotate image if in portrait mode to fit it as landscape
+  if (orientation === "portrait") {
     image = image.rotate(90);
   }
 
-  image = await image.resize(frameSize - 2 * padding, frameSize - padding, {
+  // Resize image to fit within the content dimensions
+  const maxContentWidth = frameWidth - 80; // 40 px border on each side
+  const maxContentHeight = frameHeight - 80; // 40 px border on each top and bottom
+  image = await image.resize(maxContentWidth, maxContentHeight, {
     fit: "inside",
     withoutEnlargement: true,
   });
 
+  // Calculate dynamic padding to center the image within the frame
+  const metadata = await image.metadata();
+  const horizontalPadding = Math.max(40, (frameWidth - metadata.width) / 2);
+  const verticalPadding = Math.max(40, (frameHeight - metadata.height) / 2);
+
+  // Extend the image to the full frame size with dynamic padding
   return image.extend({
-    top: padding,
-    bottom: padding,
-    left: padding,
-    right: padding,
-    background: colors[biome.toLowerCase()] || {
-      r: 0,
-      g: 0,
-      b: 0,
-      alpha: 0.31,
-    },
+    top: Math.floor(verticalPadding),
+    bottom: Math.ceil(verticalPadding),
+    left: Math.floor(horizontalPadding),
+    right: Math.ceil(horizontalPadding),
+    background: colors[biome.toLowerCase()] || { r: 0, g: 0, b: 0, alpha: 0 },
   });
 }
 
 export async function generatePNG(
-  wallArray: number[][],
+  wallArray: string | any[],
   biome = "default"
-): Promise<sharp.Sharp> {
+) {
   const scale = 30;
   const width = wallArray.length;
   const height = wallArray[0].length;
@@ -48,16 +55,16 @@ export async function generatePNG(
 
   await drawMapTiles(ctx, wallArray, scale);
   const buffer = canvas.toBuffer("image/png");
-  const frameSize = 1024;
-  const padding = 50;
+  const frameWidth = 1280;
+  const frameHeight = 1080;
 
   const image = await processImage(
     buffer,
     height,
     width,
     scale,
-    frameSize,
-    padding,
+    frameWidth,
+    frameHeight,
     biome
   );
   const finalCanvas = await image.toBuffer();
