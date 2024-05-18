@@ -13,6 +13,14 @@ const rl = readline.createInterface({
   output: process.stdout,
 });
 
+function cleanKey(key: string): string {
+  if (key.toLowerCase() === "rowcount" || key.toLowerCase() === "colcount") {
+    console.error(`[WARNING] Found key with uppercase letters: ${key}`);
+    return key.toLowerCase();
+  }
+  return key;
+}
+
 const cleanMapFile = (filePath: string): void => {
   const encoding = chardet.detectFileSync(filePath) || "utf8";
   console.log(`Detected file encoding: ${encoding}`);

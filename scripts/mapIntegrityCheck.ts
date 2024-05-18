@@ -115,6 +115,21 @@ async function mapTileIntegrityCheck(baseDir: string): Promise<any> {
     }
   }
 
+  function cleanKey(key: string): string {
+    if (key.toLowerCase() === "rowcount" || key.toLowerCase() === "colcount") {
+      console.error(`[WARNING] Found key with uppercase letters: ${key}`);
+      return key.toLowerCase();
+    }
+    return key;
+  }
+
+  function alertIncorrectRowOrColCase(key: string): string {
+    if (key.toLowerCase() === "rowcount" || key.toLowerCase() === "colcount") {
+      console.error(`[WARNING] Found key with uppercase letters: ${key}`);
+    }
+    return key;
+  }
+
   await traverseDirectory(baseDir);
 
   let commonTiles = new Set<number>([...allTiles]);
@@ -148,11 +163,6 @@ async function mapTileIntegrityCheck(baseDir: string): Promise<any> {
   console.log(`Directories with .dat files: ${directoriesWithDatFiles}`);
   console.log(
     `Standout tiles (not matching colormap): ${standoutTiles.join(", ")}`
-  );
-  console.log(
-    `Tiles that appeared in only one file: ${uniqueTiles.join(
-      ", "
-    )}, consider adding them to the colormap`
   );
 
   if (failedFiles.length > 0) {
