@@ -2,7 +2,6 @@ import sharp from "sharp";
 import { colors } from "./colorMap";
 import { createCanvas } from "canvas";
 import { drawMapTiles } from "./drawMapTiles";
-
 async function processImage(
   buffer: sharp.SharpOptions | Buffer | any,
   height: number,
@@ -14,13 +13,6 @@ async function processImage(
   biome: string
 ) {
   let image = sharp(buffer).sharpen();
-  let orientation = width > height ? "landscape" : "portrait";
-
-  // Rotate image if in portrait mode initially to make it landscape
-  if (orientation === "portrait") {
-    image = image.rotate(90);
-    [width, height] = [height, width]; // Swap dimensions after rotation
-  }
 
   // Resize image to fit within the frame dimensions, considering padding
   image = await image.resize(
@@ -32,14 +24,8 @@ async function processImage(
     }
   );
 
-  // Ensure the image is in portrait for the final output
-  orientation = frameWidth > frameHeight ? "landscape" : "portrait";
-  if (orientation === "landscape") {
-    image = image.rotate(90); // Rotate to make it portrait
-  }
-
   // Extend the resized image with padding and colored background
-  return image.extend({
+  image = await image.extend({
     top: padding,
     bottom: padding,
     left: padding,
@@ -51,15 +37,22 @@ async function processImage(
       alpha: 0.31,
     },
   });
-}
 
+  // Rotate the image if it is in landscape (width > height)
+  const metadata = await image.metadata();
+  if (metadata.width > metadata.height) {
+    image = image.rotate(90);
+  }
+
+  return image;
+}
 export async function generatePNG(
   wallArray: string | any[],
   biome = "default"
 ) {
   const minHeightScale = 1280 / wallArray[0].length; // Scale based on height
   const minWidthScale = 1280 / wallArray.length; // Scale based on width
-  const scale = Math.max(minHeightScale, minWidthScale); // Choose the maximum to ensure at least one dimension is >= 1280
+  const scale = Math.max(minHeightScale, minWidthScale); // Ensure at least one dimension is >= 1280
 
   const width = wallArray.length * scale;
   const height = wallArray[0].length * scale;
@@ -68,11 +61,11 @@ export async function generatePNG(
 
   await drawMapTiles(ctx, wallArray, scale);
   const buffer = canvas.toBuffer("image/png");
-  const frameWidth = Math.floor(width); // Update frame dimensions based on new scale
+  const frameWidth = Math.floor(width);
   const frameHeight = Math.floor(height);
   const padding = 50;
 
-  const image = await processImage(
+  let image = await processImage(
     buffer,
     height,
     width,
@@ -82,7 +75,36 @@ export async function generatePNG(
     padding,
     biome
   );
-  const finalCanvas = await image.toBuffer();
 
+  // Final check and resize if needed
+  const metadata = await image.metadata();
+  if (metadata.width > 1280 || metadata.height > 1080) {
+    image = await image.resize(1280, 1080, { fit: "cover" });
+
+    // Create a new transparent canvas to center the image
+    const finalImage = sharp({
+      create: {
+        width: 1280,
+        height: 1080,
+        channels: 4,
+        background: { r: 0, g: 0, b: 0, alpha: 0 },
+      },
+    });
+
+    // Calculate offsets for centering the image
+    const xOffset = (1280 - metadata.width) / 2;
+    const yOffset = (1080 - metadata.height) / 2;
+
+    // Composite the resized image onto the transparent background
+    image = finalImage.composite([
+      {
+        input: await image.toBuffer(),
+        left: Math.max(xOffset, 0),
+        top: Math.max(yOffset, 0),
+      },
+    ]);
+  }
+
+  const finalCanvas = await image.toBuffer();
   return sharp(finalCanvas);
 }
