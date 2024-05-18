@@ -17,7 +17,7 @@ export async function generatePNGFromFiles(
       const parsedData = await parseMapDataFromFile({ filePath });
       const wallArray = create2DArray({
         data: parsedData.tilesArray,
-        width: parsedData.longestDimension,
+        width: parsedData.colcount,
       });
 
       const image = await generatePNG(wallArray, parsedData.biome);
