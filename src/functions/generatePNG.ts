@@ -46,26 +46,24 @@ async function processImage(
 
   return image;
 }
+
 export async function generatePNG(
   wallArray: string | any[],
   biome = "default"
 ) {
-  const minHeightScale = 1280 / wallArray[0].length; // Scale based on height
-  const minWidthScale = 1280 / wallArray.length; // Scale based on width
-  const scale = Math.max(minHeightScale, minWidthScale); // Ensure at least one dimension is >= 1280
-
-  const width = wallArray.length * scale;
-  const height = wallArray[0].length * scale;
-  const canvas = createCanvas(Math.floor(width), Math.floor(height));
+  const scale = 30;
+  const width = wallArray.length;
+  const height = wallArray[0].length;
+  const canvas = createCanvas(width * scale, height * scale);
   const ctx = canvas.getContext("2d");
 
   await drawMapTiles(ctx, wallArray, scale);
   const buffer = canvas.toBuffer("image/png");
-  const frameWidth = Math.floor(width);
-  const frameHeight = Math.floor(height);
+  const frameWidth = 1280;
+  const frameHeight = 1080;
   const padding = 50;
 
-  let image = await processImage(
+  const image = await processImage(
     buffer,
     height,
     width,
@@ -75,36 +73,7 @@ export async function generatePNG(
     padding,
     biome
   );
-
-  // Final check and resize if needed
-  const metadata = await image.metadata();
-  if (metadata.width > 1280 || metadata.height > 1080) {
-    image = await image.resize(1280, 1080, { fit: "cover" });
-
-    // Create a new transparent canvas to center the image
-    const finalImage = sharp({
-      create: {
-        width: 1280,
-        height: 1080,
-        channels: 4,
-        background: { r: 0, g: 0, b: 0, alpha: 0 },
-      },
-    });
-
-    // Calculate offsets for centering the image
-    const xOffset = (1280 - metadata.width) / 2;
-    const yOffset = (1080 - metadata.height) / 2;
-
-    // Composite the resized image onto the transparent background
-    image = finalImage.composite([
-      {
-        input: await image.toBuffer(),
-        left: Math.max(xOffset, 0),
-        top: Math.max(yOffset, 0),
-      },
-    ]);
-  }
-
   const finalCanvas = await image.toBuffer();
+
   return sharp(finalCanvas);
 }
