@@ -61,7 +61,7 @@ export async function generatePNG(
   const buffer = canvas.toBuffer("image/png");
   const frameWidth = 1280;
   const frameHeight = 1080;
-  const padding = 50;
+  const padding = 30;
 
   const image = await processImage(
     buffer,
@@ -73,13 +73,11 @@ export async function generatePNG(
     padding,
     biome
   );
-  // Update in your generatePNG function
-  const finalImage = await image.resize(1280, 1280, {
+
+  const finalCanvas = await image.toBuffer();
+
+  return await sharp(finalCanvas).resize(1280, 1280, {
     fit: "contain",
-    background: { r: 0, g: 0, b: 0, alpha: 1 },
+    background: { r: 0, g: 0, b: 0, alpha: 0.1 },
   });
-
-  const finalCanvas = await finalImage.toBuffer();
-
-  return sharp(finalCanvas);
 }
