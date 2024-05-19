@@ -124,9 +124,7 @@ async function calculateMapSizeStats(baseDir: string): Promise<any> {
 
 async function init() {
   try {
-    const directoryPath =
-      process.env.MMT_CATALOG_DIR ||
-      path.join(os.homedir(), "Desktop", "discordChannelBot", "catalog");
+    const directoryPath = process.env.MMT_CATALOG_DIR;
 
     rl.question(
       `The directory to be processed is: ${directoryPath}. Would you like to proceed? (yes/no): \n`,

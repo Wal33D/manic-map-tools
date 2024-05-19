@@ -1,7 +1,6 @@
 import * as dotenv from "dotenv";
 import * as fs from "fs/promises";
 import * as path from "path";
-import * as os from "os";
 import * as chardet from "chardet";
 import { Stats } from "fs";
 import { colors } from "../src/functions/colorMap";
@@ -115,21 +114,6 @@ async function mapTileIntegrityCheck(baseDir: string): Promise<any> {
     }
   }
 
-  function cleanKey(key: string): string {
-    if (key.toLowerCase() === "rowcount" || key.toLowerCase() === "colcount") {
-      console.error(`[WARNING] Found key with uppercase letters: ${key}`);
-      return key.toLowerCase();
-    }
-    return key;
-  }
-
-  function alertIncorrectRowOrColCase(key: string): string {
-    if (key.toLowerCase() === "rowcount" || key.toLowerCase() === "colcount") {
-      console.error(`[WARNING] Found key with uppercase letters: ${key}`);
-    }
-    return key;
-  }
-
   await traverseDirectory(baseDir);
 
   let commonTiles = new Set<number>([...allTiles]);
@@ -150,7 +134,6 @@ async function mapTileIntegrityCheck(baseDir: string): Promise<any> {
     directoriesChecked,
     directoriesWithDatFiles,
     totalUniqueTiles: allTiles.size,
-    commonTiles: [...commonTiles],
     standoutTiles,
     uniqueTiles,
     failedFilesDetails: failedFiles,
@@ -181,9 +164,7 @@ async function mapTileIntegrityCheck(baseDir: string): Promise<any> {
 }
 
 async function init() {
-  const directoryPath =
-    process.env.MMT_CATALOG_DIR ||
-    path.join(os.homedir(), "Desktop", "discordChannelBot", "catalog");
+  const directoryPath = process.env.MMT_MAPS_PROCESSED_DIR;
   const processingResults = await mapTileIntegrityCheck(directoryPath);
   console.log(processingResults);
 }

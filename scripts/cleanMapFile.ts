@@ -2,7 +2,6 @@ import * as fs from "fs";
 import * as path from "path";
 import * as chardet from "chardet";
 import * as iconv from "iconv-lite";
-import * as os from "os";
 import * as dotenv from "dotenv";
 import * as readline from "readline";
 
@@ -111,23 +110,27 @@ const cleanMapFile = (filePath: string): void => {
   });
 };
 
-const getDatFiles = (dirPath: string): Promise<string[]> => {
-  return new Promise((resolve, reject) => {
-    fs.readdir(dirPath, (err, files) => {
-      if (err) {
-        return reject(`[ERROR] Error reading directory ${dirPath}: ${err}`);
-      }
+const getDatFiles = async (dirPath: string): Promise<string[]> => {
+  const datFiles: string[] = [];
 
-      const datFiles = files.filter((file) => {
-        const filePath = path.join(dirPath, file);
-        return (
-          fs.statSync(filePath).isFile() && path.extname(filePath) === ".dat"
-        );
-      });
-
-      resolve(datFiles.map((file) => path.join(dirPath, file)));
+  const traverseDirectories = async (currentPath: string) => {
+    const files = await fs.promises.readdir(currentPath, {
+      withFileTypes: true,
     });
-  });
+
+    for (const file of files) {
+      const filePath = path.join(currentPath, file.name);
+      if (file.isDirectory()) {
+        await traverseDirectories(filePath);
+      } else if (file.isFile() && path.extname(filePath) === ".dat") {
+        datFiles.push(filePath);
+      }
+    }
+  };
+
+  await traverseDirectories(dirPath);
+
+  return datFiles;
 };
 
 const processDatFiles = (filePaths: string[]): void => {
@@ -136,9 +139,7 @@ const processDatFiles = (filePaths: string[]): void => {
 
 async function init() {
   try {
-    const directoryPath =
-      process.env.MMT_CLEANME_DIR ||
-      path.join(os.homedir(), "Desktop", "discordChannelBot", "cleanme");
+    const directoryPath = process.env.MMT_CLEAN_ME_DIR;
 
     const datFiles = await getDatFiles(directoryPath);
 

@@ -76,7 +76,7 @@ export async function processDirectory(datDirectory: string) {
 
 // Generate PNGs for all .dat levels in the directory
 async function init() {
-  const directoryPath = process.env.MMT_PNGME_DIR;
+  const directoryPath = process.env.MMT_GENERATE_PNG_DIR;
   const processingResults = await processDirectory(directoryPath);
   console.log(processingResults);
 }

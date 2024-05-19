@@ -65,27 +65,21 @@ async function logMapDataStats(baseDir: string): Promise<any> {
     console.log("Failed file paths:");
     failedFiles.forEach((file) => console.log(file));
   }
-  console.log("Parsed Map Data:");
-  mapDataResults.forEach((data, index) => {
-    console.log(`Map ${index + 1}:`, JSON.stringify(data, null, 2));
-  });
-  console.log("=================================================");
 
   return result;
 }
 
 async function init() {
   try {
-    const directoryPath =
-      process.env.MMT_MAPDATA_DIR ||
-      path.join(os.homedir(), "Desktop", "discordChannelBot", "downloads");
-
+    const directoryPath = process.env.MMT_MAPS_PROCESSED_DIR;
     rl.question(
       `The directory to be processed is: ${directoryPath}. Would you like to proceed? (yes/no): \n`,
       async (answer) => {
         if (answer.toLowerCase() === "yes") {
           const processingResults = await logMapDataStats(directoryPath);
+          console.log("Parsed Map Data:");
           console.log(processingResults);
+          console.log("=================================================");
         } else {
           console.log("[INFO] Process aborted by user.");
         }

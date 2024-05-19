@@ -42,7 +42,6 @@ export function parseMapDataFromFile({
   return new Promise((resolve, reject) => {
     // Detect the file encoding
     const encoding = chardet.detectFileSync(filePath) || "utf8";
-    console.log(`Detected file encoding: ${encoding}`);
 
     fs.readFile(filePath, (err, data) => {
       if (err) {
