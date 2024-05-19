@@ -16,14 +16,14 @@ export function drawTile(
   const tileGradient = patternCtx.createLinearGradient(0, 0, scale, scale);
   tileGradient.addColorStop(
     0,
-    `rgba(${color.r}, ${color.g}, ${color.b}, ${color.a || 1})`
+    `rgba(${color.r}, ${color.g}, ${color.b}, ${color.alpha || 1})`
   );
   tileGradient.addColorStop(
     1,
     `rgba(${Math.max(0, color.r - 20)}, ${Math.max(
       0,
       color.g - 20
-    )}, ${Math.max(0, color.b - 20)}, ${color.a || 1})`
+    )}, ${Math.max(0, color.b - 20)}, ${color.alpha || 1})`
   );
   patternCtx.fillStyle = tileGradient;
   patternCtx.fillRect(0, 0, scale, scale);
