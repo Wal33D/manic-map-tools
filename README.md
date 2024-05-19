@@ -137,9 +137,16 @@ Happy mapping!
 
 To generate a PNG image from a `.dat` file, you can run the following command:
 
-```bash
+\`\`\`bash
 npm run generate
+\`\`\`
 
-```
+Make sure to set the environment variable for the directory or directories to traverse. You need to set the environment variable `MMT_GENERATE_PNG_DIR` like this:
+
+\`\`\`env
+MMT_GENERATE_PNG_DIR=C://Users//Aquataze//Desktop//pngme
+\`\`\`
+
+The generated PNG example can be found in the same directory as the `.dat` file and is named `demo.png`. This image is generated from `demo.dat`.
 
 ![Demo PNG](https://github.com/Wal33D/manic-map-tools/blob/master/demo.png)
