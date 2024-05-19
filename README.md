@@ -36,6 +36,7 @@ This project includes several scripts to process and analyze map data files. Bef
 Create a `.env` file in the root directory of the project and add the following environment variables:
 
 ```env
+MMT_CATALOG_DIR=C://Users//YourUsername//Desktop//discordChannelBot//pngme
 MMT_CATALOG_DIR=C://Users//YourUsername//Desktop//discordChannelBot//downloads
 MMT_CLEANME_DIR=C://Users//YourUsername//Desktop//discordChannelBot//cleanme
 MMT_MAPDATA_DIR=C://Users//YourUsername//Desktop//discordChannelBot//downloads
@@ -131,3 +132,12 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 Feel free to contribute to this project by opening issues and submitting pull requests. If you have any questions or need further assistance, please contact the project maintainer.
 
 Happy mapping!
+
+## Additional Information
+
+To generate a PNG image from a `.dat` file, you can run the following command:
+
+```bash
+npm run generate
+![Alt text](demo.png)
+```
