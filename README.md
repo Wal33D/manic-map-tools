@@ -139,5 +139,7 @@ To generate a PNG image from a `.dat` file, you can run the following command:
 
 ```bash
 npm run generate
-![Alt text](https://github.com/Wal33D/manic-map-tools/blob/master/demo.png)
+
 ```
+
+![Demo PNG](https://github.com/Wal33D/manic-map-tools/blob/master/demo.png)
