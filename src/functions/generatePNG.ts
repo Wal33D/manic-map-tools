@@ -2,11 +2,9 @@ import sharp from "sharp";
 import { colors } from "./colorMap";
 import { createCanvas } from "canvas";
 import { drawMapTiles } from "./drawMapTiles";
-async function processImage(
+
+export async function processImage(
   buffer: sharp.SharpOptions | Buffer | any,
-  height: number,
-  width: number,
-  scale: number,
   frameWidth: number,
   frameHeight: number,
   padding: number,
@@ -51,7 +49,7 @@ export async function generatePNG(
   wallArray: string | any[],
   biome = "default"
 ) {
-  const scale = 30;
+  const scale = 17;
   const width = wallArray.length;
   const height = wallArray[0].length;
   const canvas = createCanvas(width * scale, height * scale);
@@ -61,13 +59,10 @@ export async function generatePNG(
   const buffer = canvas.toBuffer("image/png");
   const frameWidth = 1280;
   const frameHeight = 1080;
-  const padding = 30;
+  const padding = 25;
 
   const image = await processImage(
     buffer,
-    height,
-    width,
-    scale,
     frameWidth,
     frameHeight,
     padding,

@@ -12,7 +12,16 @@ export async function generatePNGFromFiles(
   const results = [];
 
   for (const filePath of files) {
-    const outputFilePath = filePath.replace(/\.dat$/, ".png");
+    const outputDir = path.dirname(filePath);
+    const outputFilePath = path.join(outputDir, "screenshot_render.png");
+
+    try {
+      await fs.access(outputFilePath);
+      console.log("File already exists:", outputFilePath);
+      results.push({ success: true, filePath: outputFilePath });
+      continue;
+    } catch {}
+
     try {
       const parsedData = await parseMapDataFromFile({ filePath });
       const wallArray = create2DArray({
@@ -32,35 +41,43 @@ export async function generatePNGFromFiles(
 
   return results;
 }
-// Helper function to find all dat files recursively in a directory
+
 async function findAllDatFiles(dir: any) {
   let results: any[] = [];
   const entries = await fs.readdir(dir, { withFileTypes: true });
   for (const entry of entries) {
     const fullPath = path.join(dir, entry.name);
     if (entry.isDirectory()) {
-      results = results.concat(await findAllDatFiles(fullPath)); // Recursively find in subdirectories
+      results = results.concat(await findAllDatFiles(fullPath));
     } else if (entry.isFile() && entry.name.endsWith(".dat")) {
-      results.push(fullPath); // Collect dat files
+      results.push(fullPath);
     }
   }
   return results;
 }
 
-// Function to process all dat files in a directory and its subdirectories
 export async function processDirectory(datDirectory: string) {
   const datFiles = await findAllDatFiles(datDirectory);
   const results = [];
 
   for (const filePath of datFiles) {
-    const outputFilePath = filePath.replace(/\.dat$/, ".png");
+    const outputDir = path.dirname(filePath);
+    const outputFilePath = path.join(outputDir, "screenshot_render.png");
+
+    try {
+      await fs.access(outputFilePath);
+      console.log("File already exists:", outputFilePath);
+      results.push({ success: true, filePath: outputFilePath });
+      continue;
+    } catch {}
+
     try {
       const parsedData = await parseMapDataFromFile({ filePath });
       const wallArray = create2DArray({
         data: parsedData.tilesArray,
         width: parsedData.colcount,
       });
-      //   console.log(parsedData);
+
       const image = await generatePNG(wallArray, parsedData.biome);
       await image.toFile(outputFilePath);
       console.log("Image padded with border and saved as " + outputFilePath);
@@ -74,7 +91,6 @@ export async function processDirectory(datDirectory: string) {
   return results;
 }
 
-// Generate PNGs for all .dat levels in the directory
 async function init() {
   const directoryPath = process.env.MMT_GENERATE_PNG_DIR;
   const processingResults = await processDirectory(directoryPath);

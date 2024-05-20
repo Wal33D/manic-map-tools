@@ -14,6 +14,12 @@ export interface ParsedMapData {
   isSquare: boolean;
   biome: string;
   creator: string;
+  vehicles: string;
+  miners: string;
+  creatures: string;
+  briefingsuccess: string;
+  briefingfailure: string;
+  briefing: string;
   levelname: string;
   sizeCategory: string;
   tilesArray: number[];

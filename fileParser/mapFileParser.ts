@@ -32,6 +32,12 @@ import { countResources, getSizeCategory } from "./utils";
  * - heightArray: array of elevation values
  * - oreArray: array of ore quantities per tile
  * - crystalArray: array of crystal quantities per tile
+ * - creatures: list of creatures in the map
+ * - miners: list of miners in the map
+ * - briefing: mission briefing text
+ * - briefingsuccess: success briefing text
+ * - briefingfailure: failure briefing text
+ * - vehicles: list of vehicles in the map
  */
 
 export function parseMapDataFromFile({
@@ -75,6 +81,12 @@ export function parseMapDataFromFile({
         heightArray: [],
         oreArray: [],
         crystalArray: [],
+        creatures: "",
+        miners: "",
+        briefing: "",
+        briefingsuccess: "",
+        briefingfailure: "",
+        vehicles: "",
       };
 
       const lines = levelFileData
@@ -129,6 +141,15 @@ export function parseMapDataFromFile({
           } else if (currentKey === "height") {
             parsedData.heightArray = parsedData.heightArray.concat(numbers);
           }
+        } else if (
+          currentKey === "creatures" ||
+          currentKey === "miners" ||
+          currentKey === "briefing" ||
+          currentKey === "briefingsuccess" ||
+          currentKey === "briefingfailure" ||
+          currentKey === "vehicles"
+        ) {
+          parsedData[currentKey] += line + "\n";
         }
       });
 
