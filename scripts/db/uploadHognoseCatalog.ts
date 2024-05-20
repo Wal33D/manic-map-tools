@@ -10,9 +10,9 @@ const DB_PASSWORD = process.env.DB_PASSWORD;
 const DB_CLUSTER = process.env.DB_CLUSTER;
 const DATABASE_NAME = process.env.DATABASE_NAME || "levelsCatalogDB";
 
-const DIRECTORY_PATH: any = process.env.HOGNOSE_LEVELS_CATALOG_DIR;
+const ROOT_DIRECTORY_PATH = process.env.HOGNOSE_LEVELS_CATALOG_DIR;
 
-if (!DB_USERNAME || !DB_PASSWORD || !DB_CLUSTER || !DIRECTORY_PATH) {
+if (!DB_USERNAME || !DB_PASSWORD || !DB_CLUSTER || !ROOT_DIRECTORY_PATH) {
   console.error(
     "Error: DB_USERNAME, DB_PASSWORD, DB_CLUSTER, and HOGNOSE_LEVELS_CATALOG_DIR must be set in the .env.local file."
   );
@@ -20,12 +20,8 @@ if (!DB_USERNAME || !DB_PASSWORD || !DB_CLUSTER || !DIRECTORY_PATH) {
 }
 
 const MONGODB_URI = `mongodb+srv://${DB_USERNAME}:${DB_PASSWORD}${DB_CLUSTER}/${DATABASE_NAME}?retryWrites=true&w=majority`;
-const CATALOG_INDEX_FILE_PATH = path.resolve(
-  DIRECTORY_PATH,
-  "catalog_index.json"
-);
 
-async function uploadDirectoryToMongoDB() {
+async function uploadAllCatalogsToMongoDB() {
   const client = new MongoClient(MONGODB_URI, {});
 
   try {
@@ -33,33 +29,37 @@ async function uploadDirectoryToMongoDB() {
     await client.connect();
     const db = client.db(DATABASE_NAME);
 
-    console.log(`Reading catalog index file from: ${CATALOG_INDEX_FILE_PATH}`);
-    if (!fs.existsSync(CATALOG_INDEX_FILE_PATH)) {
-      throw new Error(
-        `Catalog index file not found at ${CATALOG_INDEX_FILE_PATH}`
+    console.log(`Traversing directory: ${ROOT_DIRECTORY_PATH}`);
+    const catalogDirs = findCatalogDirectories(ROOT_DIRECTORY_PATH);
+
+    for (const catalogDir of catalogDirs) {
+      const catalogIndexFilePath = path.join(catalogDir, "catalog_index.json");
+      const catalogIndex = JSON.parse(
+        fs.readFileSync(catalogIndexFilePath, "utf8")
       );
+      const collectionName = catalogIndex.catalog;
+
+      if (!collectionName) {
+        console.error(
+          `Catalog name not found in the catalog index file at ${catalogIndexFilePath}. Skipping...`
+        );
+        continue;
+      }
+
+      const collection = db.collection(collectionName);
+
+      // Ensure unique index on levelName field
+      await collection.createIndex({ levelName: 1 }, { unique: true });
+
+      console.log(
+        `Uploading directory: ${catalogDir} to collection: ${collectionName}`
+      );
+      await traverseAndUpload(catalogDir, collection);
+
+      console.log(`Upload completed for directory: ${catalogDir}`);
     }
 
-    const catalogIndex = JSON.parse(
-      fs.readFileSync(CATALOG_INDEX_FILE_PATH, "utf8")
-    );
-    const collectionName = catalogIndex.catalog;
-
-    if (!collectionName) {
-      throw new Error("Catalog name not found in the catalog index file.");
-    }
-
-    const collection = db.collection(collectionName);
-
-    // Ensure unique index on levelName field
-    await collection.createIndex({ levelName: 1 }, { unique: true });
-
-    console.log(
-      `Uploading directory: ${DIRECTORY_PATH} to collection: ${collectionName}`
-    );
-    await traverseAndUpload(DIRECTORY_PATH, collection);
-
-    console.log("Upload completed successfully.");
+    console.log("All catalogs have been uploaded successfully.");
   } catch (error) {
     if (error.code === 11000) {
       console.error("Duplicate entry found. Skipping upload.");
@@ -69,6 +69,31 @@ async function uploadDirectoryToMongoDB() {
   } finally {
     await client.close();
   }
+}
+
+function findCatalogDirectories(directoryPath: string): string[] {
+  const catalogDirs = [] as any;
+
+  function recurseDirs(currentPath: string) {
+    const items = fs.readdirSync(currentPath);
+
+    for (const item of items) {
+      const itemPath = path.join(currentPath, item);
+      const stats = fs.statSync(itemPath);
+
+      if (stats.isDirectory()) {
+        const catalogIndexPath = path.join(itemPath, "catalog_index.json");
+        if (fs.existsSync(catalogIndexPath)) {
+          catalogDirs.push(itemPath);
+        } else {
+          recurseDirs(itemPath); // Recurse into subdirectories
+        }
+      }
+    }
+  }
+
+  recurseDirs(directoryPath);
+  return catalogDirs;
 }
 
 async function traverseAndUpload(directoryPath: string, collection: any) {
@@ -120,4 +145,4 @@ async function processLevelDirectory(directoryPath: string) {
   return levelDocuments;
 }
 
-uploadDirectoryToMongoDB();
+uploadAllCatalogsToMongoDB();
