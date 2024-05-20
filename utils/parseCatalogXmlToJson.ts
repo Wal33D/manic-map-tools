@@ -25,10 +25,7 @@ export async function parseCatalogXmlToJson(
     const title = camelCaseString(name);
 
     const collection = metadata.collection.split("-");
-    const channelTitle = collection
-      .slice(0, 2)
-      .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(" ");
+
     const roomTitle = collection[2]
       ? collection[2].charAt(0).toUpperCase() + collection[2].slice(1)
       : "Archive";
@@ -41,16 +38,16 @@ export async function parseCatalogXmlToJson(
     );
 
     const parsedJson = {
-      roomTitle,
-      channelTitle,
-      id: metadata.identifier,
+      catalog: roomTitle,
+      catalogType: "Level",
+      catalogId: metadata.identifier,
       title,
-      originalTitle: name,
       postedDate: metadata.date,
       author: metadata.creator,
       htmlDescription,
       textDescription,
-      archivedAt: metadata.addeddate,
+      archived: true,
+      procedurallyGenerated: false,
       pre_release: true,
       tags: keywords,
       url: `https://archive.org/details/${metadata.identifier}`,

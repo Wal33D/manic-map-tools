@@ -14,6 +14,7 @@
     "clean": "npm run prep && node dist/scripts/cleanMapFile.js",
     "buildCatalog": "npm run prep && node dist/scripts/buildArchivedLevelCatalog.js",
     "downloadArchivedFiles": "npm run prep && node dist/scripts/downloadArchivedLevelData.js",
+    "buildArchived": "npm run buildCatalog && node dist/scripts/downloadArchivedLevelData.js",
     "fetcHognose": "npm run prep && node dist/scripts/fetchHognoseMaps.js",
     "catalogHognose": "npm run prep && node dist/scripts/catalogHognoseMaps.js",
     "buildHognose": "npm run fetcHognose && node dist/scripts/catalogHognoseMaps.js",

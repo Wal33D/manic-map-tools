@@ -8,8 +8,9 @@ import { parseCatalogXmlToJson } from "../utils/parseCatalogXmlToJson";
 
 dotenv.config({ path: ".env.local" });
 const baseUrl = "https://archive.org/advancedsearch.php";
-const CACHE_FILENAME = "archived_levels_index.json";
+const CACHE_FILENAME = "catalog_index.json";
 const REQUEST_DELAY = 1500; // Delay between requests in milliseconds
+const MAX_RETRIES = 3; // Maximum number of retries for a request
 
 const CATALOG_DIR: string = process.env.MMT_ARCHIVED_CATALOG_DIR;
 
@@ -21,16 +22,16 @@ const ensureDirectoryExists = async (dir: fs.PathLike) => {
   }
 };
 
-const readCacheFile = async (filePath: string): Promise<any[]> => {
+const readCacheFile = async (filePath: string): Promise<any> => {
   try {
     const cacheFile = await fs.promises.readFile(filePath, "utf8");
     return JSON.parse(cacheFile);
   } catch {
-    return [];
+    return { catalog: "Archived", catalogType: "Level", entries: [] };
   }
 };
 
-const writeCacheFile = async (filePath: string, data: any[]) => {
+const writeCacheFile = async (filePath: string, data: any) => {
   await fs.promises.writeFile(filePath, JSON.stringify(data, null, 2), "utf8");
 };
 
@@ -58,13 +59,30 @@ const saveMetadata = async (
   );
 };
 
+const fetchWithRetries = async (url: string, retries: number = MAX_RETRIES) => {
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      const response = await axios.get(url);
+      return response;
+    } catch (error) {
+      if (attempt === retries) {
+        throw error;
+      }
+      console.warn(`Request failed (attempt ${attempt}): ${error.message}`);
+      await new Promise((resolve) => setTimeout(resolve, REQUEST_DELAY));
+    }
+  }
+};
+
 const fetchLevelsData = async (
   queryString = "manic miners"
 ): Promise<any[]> => {
   await ensureDirectoryExists(CATALOG_DIR);
   const cacheFilePath = path.join(CATALOG_DIR, CACHE_FILENAME);
   let cachedData = await readCacheFile(cacheFilePath);
-  const cachedIdentifiers = new Set(cachedData.map((entry) => entry.id));
+  const cachedIdentifiers = new Set(
+    cachedData.entries.map((entry: any) => entry.catalogId)
+  );
 
   const query = encodeURIComponent(queryString);
   const fields = [
@@ -78,7 +96,7 @@ const fetchLevelsData = async (
   const fullUrl = `${baseUrl}?q=${query}&fl[]=${fields}&mediatype='software'&rows=99999999&page=1&output=json&callback=callback`;
 
   try {
-    const { data: text } = await axios.get(fullUrl);
+    const { data: text } = await fetchWithRetries(fullUrl);
     const jsonp = text.substring(text.indexOf("(") + 1, text.lastIndexOf(")"));
     const data = JSON.parse(jsonp);
 
@@ -102,13 +120,16 @@ const fetchLevelsData = async (
         descriptionHtml: doc.description || "No description",
         thumbnailUrl: "",
         hasFiles: false,
+        archived: false,
+        procedurallyGenerated: false,
+        pre_release: false,
         metadataUrl: `https://archive.org/download/${doc.identifier}/${doc.identifier}_meta.xml`,
         downloadUrl: "",
         fileListUrl: `https://archive.org/download/${doc.identifier}/${doc.identifier}_files.xml`,
       };
 
       try {
-        const { data: xmlText } = await axios.get(levelData.fileListUrl);
+        const { data: xmlText } = await fetchWithRetries(levelData.fileListUrl);
         const xmlData = parseXmlToJson(xmlText);
 
         const datFile: any = xmlData.find((file: any) => file.format === "DAT");
@@ -151,20 +172,30 @@ const fetchLevelsData = async (
         }
 
         // Fetch metadata XML and save it as JSON with files and thumbnailUrl
-        const { data: metadataXml } = await axios.get(levelData.metadataUrl);
+        const { data: metadataXml } = await fetchWithRetries(
+          levelData.metadataUrl
+        );
         await saveMetadata(
           levelData.name,
           metadataXml,
           files,
           levelData.thumbnailUrl
         );
-      } catch (error) {
-        console.error(`Error fetching XML for ${doc.identifier}:`, error);
-      }
 
-      cachedData.push(levelData);
-      await writeCacheFile(cacheFilePath, cachedData);
-      await new Promise((resolve) => setTimeout(resolve, REQUEST_DELAY));
+        cachedData.entries.push({
+          catalogId: levelData.id,
+          directory: camelCaseString(levelData.name),
+          hasScreenshot: !!levelData.thumbnailUrl,
+          hasThumbnail: !!levelData.thumbnailUrl,
+          hasDatFile: !!levelData.downloadUrl,
+          hasCatalogJson: true,
+        });
+
+        await writeCacheFile(cacheFilePath, cachedData);
+        await new Promise((resolve) => setTimeout(resolve, REQUEST_DELAY));
+      } catch (error) {
+        console.error(`Error processing ${doc.identifier}:`, error);
+      }
     }
   } catch (error) {
     console.error("Error fetching data from the internet archive:", error);
