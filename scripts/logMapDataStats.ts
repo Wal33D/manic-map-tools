@@ -6,7 +6,7 @@ import * as readline from "readline";
 import { ParsedMapData } from "../fileParser/types";
 import { parseMapDataFromFile } from "../fileParser/mapFileParser";
 
-dotenv.config();
+dotenv.config({ path: ".env.local" });
 
 const rl = readline.createInterface({
   input: process.stdin,

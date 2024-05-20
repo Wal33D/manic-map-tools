@@ -1,4 +1,5 @@
-require("dotenv").config();
+import * as dotenv from "dotenv";
+dotenv.config({ path: ".env.local" });
 
 export function constructDescription(parsedData: any): string {
   const descriptionParts = [] as any;

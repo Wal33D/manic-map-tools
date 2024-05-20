@@ -3,7 +3,7 @@ import path from "path";
 import axios from "axios";
 import * as dotenv from "dotenv";
 
-dotenv.config();
+dotenv.config({ path: ".env.local" });
 
 const CATALOG_DIR: string = process.env.MMT_ARCHIVED_CATALOG_DIR;
 

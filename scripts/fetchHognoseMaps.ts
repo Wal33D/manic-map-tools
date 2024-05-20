@@ -16,7 +16,8 @@ import axios from "axios";
 import fs from "fs";
 import path from "path";
 import unzipper from "unzipper";
-require("dotenv").config();
+import * as dotenv from "dotenv";
+dotenv.config({ path: ".env.local" });
 
 const GITHUB_API_URL =
   "https://api.github.com/repos/charredUtensil/hognose/releases/latest";

@@ -1,6 +1,6 @@
 import * as dotenv from "dotenv";
 
-dotenv.config();
+dotenv.config({ path: ".env.local" });
 
 async function init() {
   console.log("========== Manic Miners Tools Overview ==========\n");

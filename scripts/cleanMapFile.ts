@@ -5,7 +5,7 @@ import * as iconv from "iconv-lite";
 import * as dotenv from "dotenv";
 import * as readline from "readline";
 
-dotenv.config();
+dotenv.config({ path: ".env.local" });
 
 const rl = readline.createInterface({
   input: process.stdin,

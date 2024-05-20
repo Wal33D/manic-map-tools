@@ -1,10 +1,9 @@
 import * as fs from "fs/promises";
 import * as path from "path";
-import * as os from "os";
 import * as dotenv from "dotenv";
 import * as readline from "readline";
 
-dotenv.config();
+dotenv.config({ path: ".env.local" });
 
 const rl = readline.createInterface({
   input: process.stdin,

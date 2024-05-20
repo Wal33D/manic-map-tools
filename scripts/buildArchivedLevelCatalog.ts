@@ -6,7 +6,7 @@ import { parseXmlToJson } from "../utils/parseXmlToJson";
 import { camelCaseString } from "../utils/camelCaseString";
 import { parseCatalogXmlToJson } from "../utils/parseCatalogXmlToJson";
 
-dotenv.config();
+dotenv.config({ path: ".env.local" });
 const baseUrl = "https://archive.org/advancedsearch.php";
 const CACHE_FILENAME = "archived_levels_index.json";
 const REQUEST_DELAY = 1500; // Delay between requests in milliseconds

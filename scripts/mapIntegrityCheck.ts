@@ -5,7 +5,7 @@ import * as chardet from "chardet";
 import { Stats } from "fs";
 import { colors } from "../src/functions/colorMap";
 
-dotenv.config();
+dotenv.config({ path: ".env.local" });
 
 async function mapTileIntegrityCheck(baseDir: string): Promise<any> {
   const allTiles = new Set<number>();

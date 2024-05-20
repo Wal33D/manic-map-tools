@@ -1,5 +1,7 @@
 import fs from "fs";
 import path from "path";
+import * as dotenv from "dotenv";
+
 import { generatePNG } from "../src/functions/generatePNG";
 import { create2DArray } from "../src/functions/create2DArray";
 import { generateThumbnail } from "../src/functions/generateThumbnail";
@@ -10,7 +12,7 @@ import {
   constructHtmlDescription,
 } from "../utils/constructDescriptions";
 
-require("dotenv").config();
+dotenv.config({ path: ".env.local" });
 
 const {
   HOGNOSE_LEVELS_DOWNLOAD_DIR: DOWNLOAD_DIR,

@@ -1,4 +1,5 @@
-require("dotenv").config();
+import * as dotenv from "dotenv";
+dotenv.config({ path: ".env.local" });
 const fs = require("fs").promises;
 import path from "path";
 import { generatePNG } from "../src/functions/generatePNG";
