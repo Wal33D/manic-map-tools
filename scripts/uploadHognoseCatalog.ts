@@ -47,9 +47,7 @@ async function traverseAndUpload(directoryPath: string, db: any) {
 
     if (stats.isDirectory()) {
       console.log(`Creating collection for directory: ${itemPath}`);
-      const collection = db.collection(item); // Create a new collection for each level directory
-
-      await traverseAndUpload(itemPath, db);
+      await traverseAndUpload(itemPath, db); // Recursively process subdirectories
     } else {
       const collectionName = path.basename(path.dirname(itemPath));
       const collection = db.collection(collectionName);
