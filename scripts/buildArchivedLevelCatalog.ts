@@ -112,17 +112,17 @@ const fetchLevelsData = async (
       if (cachedIdentifiers.has(doc.identifier)) continue;
 
       const levelData = {
-        name: doc.title.split("|")[0].trim() || "No title",
-        id: doc.identifier,
-        author: doc.creator || "No author",
-        postedDate: doc.date || "No date",
-        downloadCount: parseInt(doc.downloads) || 0,
-        descriptionHtml: doc.description || "No description",
-        thumbnailUrl: "",
-        hasFiles: false,
+        catalog: "Archived",
+        catalogType: "Level",
         archived: false,
-        procedurallyGenerated: false,
         pre_release: false,
+        catalogId: doc.identifier,
+        title: doc.title.split("|")[0].trim() || "No title",
+        postedDate: doc.date || "No date",
+        author: doc.creator || "No author",
+        htmlDescription: doc.description || "No description",
+        thumbnail: "",
+        screenshot: "",
         metadataUrl: `https://archive.org/download/${doc.identifier}/${doc.identifier}_meta.xml`,
         downloadUrl: "",
         fileListUrl: `https://archive.org/download/${doc.identifier}/${doc.identifier}_files.xml`,
@@ -157,10 +157,6 @@ const fetchLevelsData = async (
             fileUrl: `https://archive.org/download/${doc.identifier}/${file.name}`,
           }));
 
-        if (files.length > 0) {
-          levelData.hasFiles = true;
-        }
-
         if (thumbnails.length) {
           const largestThumbnail = thumbnails.reduce(
             (prev: { size: string }, current: { size: string }) =>
@@ -168,7 +164,7 @@ const fetchLevelsData = async (
                 ? current
                 : prev
           );
-          levelData.thumbnailUrl = `https://archive.org/download/${doc.identifier}/${largestThumbnail.name}`;
+          levelData.thumbnail = `https://archive.org/download/${doc.identifier}/${largestThumbnail.name}`;
         }
 
         // Fetch metadata XML and save it as JSON with files and thumbnailUrl
@@ -176,17 +172,17 @@ const fetchLevelsData = async (
           levelData.metadataUrl
         );
         await saveMetadata(
-          levelData.name,
+          levelData.title,
           metadataXml,
           files,
-          levelData.thumbnailUrl
+          levelData.thumbnail
         );
 
         cachedData.entries.push({
-          catalogId: levelData.id,
-          directory: camelCaseString(levelData.name),
-          hasScreenshot: !!levelData.thumbnailUrl,
-          hasThumbnail: !!levelData.thumbnailUrl,
+          catalogId: levelData.catalogId,
+          directory: camelCaseString(levelData.title),
+          hasScreenshot: !!levelData.thumbnail,
+          hasThumbnail: !!levelData.thumbnail,
           hasDatFile: !!levelData.downloadUrl,
           hasCatalogJson: true,
         });
