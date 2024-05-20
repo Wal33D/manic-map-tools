@@ -1,6 +1,7 @@
 import { parseStringPromise } from "xml2js";
 import { camelCaseString } from "../utils/camelCaseString";
 import { parse } from "node-html-parser";
+import path from "path";
 
 export async function parseCatalogXmlToJson(
   xml: string,
@@ -15,11 +16,6 @@ export async function parseCatalogXmlToJson(
       mergeAttrs: true,
     });
     const metadata = result.metadata;
-
-    const keywords = Array.isArray(metadata.subject)
-      ? metadata.subject
-      : [metadata.subject];
-
     const originalTitle = metadata.title;
     const name = originalTitle.split("|")[0].trim();
     const title = camelCaseString(name);
@@ -33,9 +29,13 @@ export async function parseCatalogXmlToJson(
     const htmlDescription = metadata.description;
     const textDescription = parse(htmlDescription).innerText.trim();
 
-    const screenshot = files.some((file: any) =>
+    const screenshotFile = files.find((file: any) =>
       ["PNG", "JPG", "JPEG"].includes(file.fileType.toUpperCase())
     );
+    const screenshot = screenshotFile ? screenshotFile.fileUrl : null;
+
+    // Calculate the relative directory path
+    const relativeDirPath = path.relative(process.cwd(), dirPath);
 
     const parsedJson = {
       catalog: roomTitle,
@@ -51,9 +51,8 @@ export async function parseCatalogXmlToJson(
       shortDescription: "",
       textDescription,
       htmlDescription,
-      path: dirPath,
+      path: relativeDirPath,
       url: `https://archive.org/details/${metadata.identifier}`,
-      filesUrl: `https://archive.org/download/${metadata.identifier}/${metadata.identifier}_files.xml`,
       files,
     };
 
