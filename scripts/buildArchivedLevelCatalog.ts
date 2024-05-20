@@ -4,7 +4,7 @@ import axios from "axios";
 import * as dotenv from "dotenv";
 import { parseXmlToJson } from "../utils/parseXmlToJson";
 import { camelCaseString } from "../utils/camelCaseString";
-import { parseCatalogXmlToJson } from "../utils/parseCatalogXmlToJson";
+import {} from "../utils/parseCatalogXmlToJson";
 
 dotenv.config({ path: ".env.local" });
 const baseUrl = "https://archive.org/advancedsearch.php";

@@ -54,8 +54,8 @@ const createCatalogData = (
   shortDescription: generateShortDescription(parsedData),
   textDescription: constructDescription(parsedData),
   htmlDescription: constructHtmlDescription(parsedData),
-  url: "https://github.com/charredUtensil/hognose",
   path: targetDir,
+  url: "https://github.com/charredUtensil/hognose",
   files: [
     {
       fileName: datFile,
