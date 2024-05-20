@@ -9,16 +9,9 @@ const DB_USERNAME = process.env.DB_USERNAME;
 const DB_PASSWORD = process.env.DB_PASSWORD;
 const DB_CLUSTER = process.env.DB_CLUSTER;
 const DATABASE_NAME = process.env.DATABASE_NAME || "levelsCatalogDB";
-const DOWNLOAD_DIR = process.env.HOGNOSE_LEVELS_TEST_DL_DIR;
-const COLLECTION_NAME = "HN-A199-9111F";
+const DOWNLOAD_DIR: any = process.env.HOGNOSE_LEVELS_TEST_DL_DIR;
 
-if (
-  !DB_USERNAME ||
-  !DB_PASSWORD ||
-  !DB_CLUSTER ||
-  !DOWNLOAD_DIR ||
-  !COLLECTION_NAME
-) {
+if (!DB_USERNAME || !DB_PASSWORD || !DB_CLUSTER || !DOWNLOAD_DIR) {
   console.error(
     "Error: DB_USERNAME, DB_PASSWORD, DB_CLUSTER, HOGNOSE_LEVELS_TEST_DL_DIR, and COLLECTION_NAME must be set in the .env.local file."
   );
@@ -27,7 +20,7 @@ if (
 
 const MONGODB_URI = `mongodb+srv://${DB_USERNAME}:${DB_PASSWORD}${DB_CLUSTER}/${DATABASE_NAME}?retryWrites=true&w=majority`;
 
-async function downloadCollectionFromMongoDB(collectionName: string) {
+async function downloadCollectionFromMongoDB(collectionName = "Hognose") {
   const client = new MongoClient(MONGODB_URI, {});
 
   try {
@@ -35,20 +28,22 @@ async function downloadCollectionFromMongoDB(collectionName: string) {
     await client.connect();
     const db = client.db(DATABASE_NAME);
     const collection = db.collection(collectionName);
-    const collectionDir = path.join(DOWNLOAD_DIR, collectionName);
-
-    if (!fs.existsSync(collectionDir)) {
-      fs.mkdirSync(collectionDir, { recursive: true });
-    }
 
     console.log(`Downloading documents from collection: ${collectionName}`);
     const documents = await collection.find().toArray();
 
     for (const doc of documents) {
-      if (doc.type === "file" && doc.content) {
-        const filePath = path.join(collectionDir, doc.name);
-        fs.writeFileSync(filePath, Buffer.from(doc.content, "base64"));
-        console.log(`File written: ${filePath}`);
+      const levelDir = path.join(DOWNLOAD_DIR, doc.levelName);
+      if (!fs.existsSync(levelDir)) {
+        fs.mkdirSync(levelDir, { recursive: true });
+      }
+
+      for (const file of doc.files) {
+        if (file.type === "file" && file.content) {
+          const filePath = path.join(levelDir, file.name);
+          fs.writeFileSync(filePath, Buffer.from(file.content, "base64"));
+          console.log(`File written: ${filePath}`);
+        }
       }
     }
 
@@ -60,4 +55,4 @@ async function downloadCollectionFromMongoDB(collectionName: string) {
   }
 }
 
-downloadCollectionFromMongoDB(COLLECTION_NAME);
+downloadCollectionFromMongoDB("Hognose");

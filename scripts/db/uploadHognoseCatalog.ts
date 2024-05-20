@@ -2,14 +2,15 @@ import fs from "fs";
 import path from "path";
 import * as dotenv from "dotenv";
 import { MongoClient } from "mongodb";
+
 dotenv.config({ path: ".env.local" });
 
 const DB_USERNAME = process.env.DB_USERNAME;
 const DB_PASSWORD = process.env.DB_PASSWORD;
 const DB_CLUSTER = process.env.DB_CLUSTER;
 const DATABASE_NAME = process.env.DATABASE_NAME || "levelsCatalogDB";
-const COLLECTION_NAME = "hognoseLevels";
-const DIRECTORY_PATH = process.env.HOGNOSE_LEVELS_CATALOG_DIR;
+
+const DIRECTORY_PATH: any = process.env.HOGNOSE_LEVELS_CATALOG_DIR;
 
 if (!DB_USERNAME || !DB_PASSWORD || !DB_CLUSTER || !DIRECTORY_PATH) {
   console.error(
@@ -19,6 +20,10 @@ if (!DB_USERNAME || !DB_PASSWORD || !DB_CLUSTER || !DIRECTORY_PATH) {
 }
 
 const MONGODB_URI = `mongodb+srv://${DB_USERNAME}:${DB_PASSWORD}${DB_CLUSTER}/${DATABASE_NAME}?retryWrites=true&w=majority`;
+const CATALOG_INDEX_FILE_PATH = path.resolve(
+  DIRECTORY_PATH,
+  "catalog_index.json"
+);
 
 async function uploadDirectoryToMongoDB() {
   const client = new MongoClient(MONGODB_URI, {});
@@ -27,14 +32,40 @@ async function uploadDirectoryToMongoDB() {
     console.log("Connecting to MongoDB...");
     await client.connect();
     const db = client.db(DATABASE_NAME);
-    const collection = db.collection(COLLECTION_NAME);
 
-    console.log(`Uploading directory: ${DIRECTORY_PATH}`);
+    console.log(`Reading catalog index file from: ${CATALOG_INDEX_FILE_PATH}`);
+    if (!fs.existsSync(CATALOG_INDEX_FILE_PATH)) {
+      throw new Error(
+        `Catalog index file not found at ${CATALOG_INDEX_FILE_PATH}`
+      );
+    }
+
+    const catalogIndex = JSON.parse(
+      fs.readFileSync(CATALOG_INDEX_FILE_PATH, "utf8")
+    );
+    const collectionName = catalogIndex.catalog;
+
+    if (!collectionName) {
+      throw new Error("Catalog name not found in the catalog index file.");
+    }
+
+    const collection = db.collection(collectionName);
+
+    // Ensure unique index on levelName field
+    await collection.createIndex({ levelName: 1 }, { unique: true });
+
+    console.log(
+      `Uploading directory: ${DIRECTORY_PATH} to collection: ${collectionName}`
+    );
     await traverseAndUpload(DIRECTORY_PATH, collection);
 
     console.log("Upload completed successfully.");
   } catch (error) {
-    console.error("Error uploading to MongoDB:", error.message);
+    if (error.code === 11000) {
+      console.error("Duplicate entry found. Skipping upload.");
+    } else {
+      console.error("Error uploading to MongoDB:", error.message);
+    }
   } finally {
     await client.close();
   }
@@ -51,17 +82,24 @@ async function traverseAndUpload(directoryPath: string, collection: any) {
       console.log(`Uploading level directory: ${itemPath}`);
       const levelDocuments = await processLevelDirectory(itemPath);
 
-      await collection.insertOne({
-        levelName: item,
-        files: levelDocuments,
-      });
+      // Check for duplicate before inserting
+      const existingDocument = await collection.findOne({ levelName: item });
+      if (!existingDocument) {
+        await collection.insertOne({
+          levelName: item,
+          files: levelDocuments,
+        });
+        console.log(`Uploaded level: ${item}`);
+      } else {
+        console.log(`Skipping duplicate level: ${item}`);
+      }
     }
   }
 }
 
 async function processLevelDirectory(directoryPath: string) {
   const items = fs.readdirSync(directoryPath);
-  const levelDocuments = [];
+  const levelDocuments = [] as any;
 
   for (const item of items) {
     const itemPath = path.join(directoryPath, item);
@@ -73,7 +111,6 @@ async function processLevelDirectory(directoryPath: string) {
 
       levelDocuments.push({
         type: "file",
-        path: itemPath,
         name: item,
         content: fileContent.toString("base64"), // Store file content as Base64
       });

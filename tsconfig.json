@@ -12,5 +12,13 @@
       "*": ["node_modules/*"]
     }
   },
-  "include": ["*.ts", "*.js", "src/**/*.ts", "scripts/*.ts", "scripts/*.js"]
+  "include": [
+    "*.ts",
+    "*.js",
+    "src/**/*.ts",
+    "scripts/*.ts",
+    "scripts/*.js",
+    "scripts/db/uploadHognoseCatalog.ts",
+    "scripts/db/downloadCollectionFromMongoDB.ts"
+  ]
 }
