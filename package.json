@@ -19,6 +19,7 @@
     "buildHognose": "npm run fetcHognose && node dist/scripts/catalogHognoseMaps.js",
     "minify": "npm run prep && node dist/scripts/minifyProject.js",
     "uploadHognoseCatalog": "npm run prep && node dist/scripts/uploadHognoseCatalog.js",
+    "downloadCollectionFromMongoDB": "npm run prep && node dist/scripts/downloadCollectionFromMongoDB.js",
     "start": "ts-node index.ts"
   },
   "author": "Waleed Judah",

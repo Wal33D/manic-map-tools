@@ -73,12 +73,12 @@ async function organizeDatFiles() {
       throw new Error(`Index file not found at ${INDEX_FILE_PATH}`);
 
     const indexData = JSON.parse(fs.readFileSync(INDEX_FILE_PATH, "utf8"));
-    const catalogIndex = fs.existsSync(CATALOG_INDEX_FILE_PATH)
+    let catalogIndex = fs.existsSync(CATALOG_INDEX_FILE_PATH)
       ? JSON.parse(fs.readFileSync(CATALOG_INDEX_FILE_PATH, "utf8"))
-      : [];
+      : { catalog: "Hognose", catalogType: "Level", entries: [] };
 
     const processedFiles = new Set(
-      catalogIndex.map((entry: any) => entry.catalogId)
+      catalogIndex.entries.map((entry: any) => entry.catalogId)
     );
 
     for (const datFile of indexData.datFiles) {
@@ -125,7 +125,7 @@ async function organizeDatFiles() {
       );
       console.log(`Created catalog.json in ${targetDir}`);
 
-      catalogIndex.push({
+      catalogIndex.entries.push({
         catalogId: catalogData.catalogId,
         directory: `${path.relative(CATALOG_DIR, targetDir)}`,
         hasScreenshot: fs.existsSync(pngPath),

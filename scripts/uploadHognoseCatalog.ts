@@ -8,6 +8,7 @@ const DB_USERNAME = process.env.DB_USERNAME;
 const DB_PASSWORD = process.env.DB_PASSWORD;
 const DB_CLUSTER = process.env.DB_CLUSTER;
 const DATABASE_NAME = process.env.DATABASE_NAME || "levelsCatalogDB";
+const COLLECTION_NAME = "hognoseLevels";
 const DIRECTORY_PATH = process.env.HOGNOSE_LEVELS_CATALOG_DIR;
 
 if (!DB_USERNAME || !DB_PASSWORD || !DB_CLUSTER || !DIRECTORY_PATH) {
@@ -26,9 +27,10 @@ async function uploadDirectoryToMongoDB() {
     console.log("Connecting to MongoDB...");
     await client.connect();
     const db = client.db(DATABASE_NAME);
+    const collection = db.collection(COLLECTION_NAME);
 
     console.log(`Uploading directory: ${DIRECTORY_PATH}`);
-    await traverseAndUpload(DIRECTORY_PATH, db);
+    await traverseAndUpload(DIRECTORY_PATH, collection);
 
     console.log("Upload completed successfully.");
   } catch (error) {
@@ -38,7 +40,7 @@ async function uploadDirectoryToMongoDB() {
   }
 }
 
-async function traverseAndUpload(directoryPath: string, db: any) {
+async function traverseAndUpload(directoryPath: string, collection: any) {
   const items = fs.readdirSync(directoryPath);
 
   for (const item of items) {
@@ -46,16 +48,30 @@ async function traverseAndUpload(directoryPath: string, db: any) {
     const stats = fs.statSync(itemPath);
 
     if (stats.isDirectory()) {
-      console.log(`Creating collection for directory: ${itemPath}`);
-      await traverseAndUpload(itemPath, db); // Recursively process subdirectories
-    } else {
-      const collectionName = path.basename(path.dirname(itemPath));
-      const collection = db.collection(collectionName);
-
-      console.log(`Uploading file: ${itemPath}`);
-      const fileContent = fs.readFileSync(itemPath);
+      console.log(`Uploading level directory: ${itemPath}`);
+      const levelDocuments = await processLevelDirectory(itemPath);
 
       await collection.insertOne({
+        levelName: item,
+        files: levelDocuments,
+      });
+    }
+  }
+}
+
+async function processLevelDirectory(directoryPath: string) {
+  const items = fs.readdirSync(directoryPath);
+  const levelDocuments = [];
+
+  for (const item of items) {
+    const itemPath = path.join(directoryPath, item);
+    const stats = fs.statSync(itemPath);
+
+    if (stats.isFile()) {
+      console.log(`Processing file: ${itemPath}`);
+      const fileContent = fs.readFileSync(itemPath);
+
+      levelDocuments.push({
         type: "file",
         path: itemPath,
         name: item,
@@ -63,6 +79,8 @@ async function traverseAndUpload(directoryPath: string, db: any) {
       });
     }
   }
+
+  return levelDocuments;
 }
 
 uploadDirectoryToMongoDB();
