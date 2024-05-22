@@ -164,7 +164,7 @@ async function mapTileIntegrityCheck(baseDir: string): Promise<any> {
 }
 
 async function init() {
-  const directoryPath = process.env.MMT_MAPS_PROCESSED_DIR;
+  const directoryPath = process.env.MMT_CATALOG_DIR;
   const processingResults = await mapTileIntegrityCheck(directoryPath);
   console.log(processingResults);
 }
