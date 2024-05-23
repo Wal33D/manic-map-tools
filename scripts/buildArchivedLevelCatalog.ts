@@ -7,11 +7,12 @@ import { camelCaseString } from "../utils/camelCaseString";
 import { parseCatalogXmlToJson } from "../utils/parseCatalogXmlToJson";
 
 dotenv.config({ path: ".env.local" });
-const baseUrl = "https://archive.org/advancedsearch.php";
-const CACHE_FILENAME = "catalog_index.json";
-const REQUEST_DELAY = 1500; // Delay between requests in milliseconds
-const MAX_RETRIES = 3; // Maximum number of retries for a request
 
+const baseUrl = "https://archive.org/advancedsearch.php";
+const REQUEST_DELAY = 1500;
+const MAX_RETRIES = 3;
+
+const CATALOG_FILENAME = "catalog_index.json";
 const CATALOG_DIR: string = process.env.MMT_ARCHIVED_CATALOG_DIR;
 
 const ensureDirectoryExists = async (dir: fs.PathLike) => {
@@ -22,7 +23,7 @@ const ensureDirectoryExists = async (dir: fs.PathLike) => {
   }
 };
 
-const readCacheFile = async (filePath: string): Promise<any> => {
+const readCatalogIndex = async (filePath: string): Promise<any> => {
   try {
     const cacheFile = await fs.promises.readFile(filePath, "utf8");
     return JSON.parse(cacheFile);
@@ -31,7 +32,7 @@ const readCacheFile = async (filePath: string): Promise<any> => {
   }
 };
 
-const writeCacheFile = async (filePath: string, data: any) => {
+const writeCatalogIndex = async (filePath: string, data: any) => {
   await fs.promises.writeFile(filePath, JSON.stringify(data, null, 2), "utf8");
 };
 
@@ -78,8 +79,8 @@ const fetchLevelsData = async (
   queryString = "manic miners"
 ): Promise<any[]> => {
   await ensureDirectoryExists(CATALOG_DIR);
-  const cacheFilePath = path.join(CATALOG_DIR, CACHE_FILENAME);
-  let cachedData = await readCacheFile(cacheFilePath);
+  const cacheFilePath = path.join(CATALOG_DIR, CATALOG_FILENAME);
+  let cachedData = await readCatalogIndex(cacheFilePath);
   const cachedIdentifiers = new Set(
     cachedData.entries.map((entry: any) => entry.catalogId)
   );
@@ -187,7 +188,7 @@ const fetchLevelsData = async (
           hasCatalogJson: true,
         });
 
-        await writeCacheFile(cacheFilePath, cachedData);
+        await writeCatalogIndex(cacheFilePath, cachedData);
         await new Promise((resolve) => setTimeout(resolve, REQUEST_DELAY));
       } catch (error) {
         console.error(`Error processing ${doc.identifier}:`, error);
