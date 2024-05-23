@@ -59,9 +59,7 @@ const createCatalogData = (
   files: [
     {
       fileName: datFile,
-      fileSize: `${(
-        fs.statSync(path.resolve(targetDir, datFile)).size / 1024
-      ).toFixed(2)} KB`,
+      fileSize: fs.statSync(path.resolve(targetDir, datFile)).size,
     },
   ],
 });
@@ -126,7 +124,6 @@ async function organizeDatFiles() {
 
       catalogIndex.entries.push({
         catalogId: catalogData.catalogId,
-        directory: `${path.relative(CATALOG_DIR, targetDir)}`,
         hasScreenshot: fs.existsSync(pngPath),
         hasThumbnail: fs.existsSync(thumbnailPath),
         hasDatFile: fs.existsSync(targetPath),
