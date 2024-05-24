@@ -16,6 +16,25 @@ export interface GenerateThumbnailResult {
   wallArrayGenerated: boolean;
   imageBufferCreated: boolean;
   fileSaved: boolean;
+  imageCreated: boolean;
+  errorDetails?: {
+    accessError?: string;
+    parseError?: string;
+    bufferError?: string;
+    saveError?: string;
+  };
+  imageBuffer?: Buffer;
+}
+
+export interface GenerateThumbnailResult {
+  status: boolean;
+  filePath: string;
+  fileAccessed: boolean;
+  parseDataSuccess: boolean;
+  wallArrayGenerated: boolean;
+  imageBufferCreated: boolean;
+  fileSaved: boolean;
+  imageCreated: boolean;
   errorDetails?: {
     accessError?: string;
     parseError?: string;
@@ -41,6 +60,7 @@ export const generateThumbnailImage = async ({
   let wallArrayGenerated = false;
   let imageBufferCreated = false;
   let fileSaved = false;
+  let imageCreated = false;
   const errorDetails: GenerateThumbnailResult["errorDetails"] = {};
   let imageBuffer: Buffer | undefined;
 
@@ -54,14 +74,20 @@ export const generateThumbnailImage = async ({
   }
 
   try {
-    const parsedData = await parseMapDataFromFile({ filePath });
-    parseDataSuccess = true;
-    const wallArray = create2DArray(parsedData.tilesArray, parsedData.colcount);
-    wallArrayGenerated = true;
-    imageBuffer = await createThumbnailBuffer(wallArray);
-    imageBufferCreated = true;
-    await sharp(imageBuffer).toFile(thumbnailPath);
-    fileSaved = true;
+    if (!fileAccessed) {
+      const parsedData = await parseMapDataFromFile({ filePath });
+      parseDataSuccess = true;
+      const wallArray = create2DArray(
+        parsedData.tilesArray,
+        parsedData.colcount
+      );
+      wallArrayGenerated = true;
+      imageBuffer = await createThumbnailBuffer(wallArray);
+      imageBufferCreated = true;
+      await sharp(imageBuffer).toFile(thumbnailPath);
+      fileSaved = true;
+      imageCreated = true;
+    }
     status = true;
   } catch (error: any) {
     if (!parseDataSuccess) errorDetails.parseError = error.message;
@@ -79,6 +105,7 @@ export const generateThumbnailImage = async ({
     imageBuffer,
     imageBufferCreated,
     fileSaved,
+    imageCreated,
     errorDetails,
   };
 };

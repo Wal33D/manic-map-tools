@@ -34,6 +34,7 @@ const processDirectory = async (
 ): Promise<Array<GeneratePNGResult | GenerateThumbnailResult>> => {
   const datFiles = await findDatFiles(datDirectory);
   const results: Array<GeneratePNGResult | GenerateThumbnailResult> = [];
+  let thumbnailsProcessed = false;
 
   for (const filePath of datFiles) {
     if (outputType === "png" || outputType === "both") {
@@ -44,10 +45,13 @@ const processDirectory = async (
     if (outputType === "thumbnail" || outputType === "both") {
       const thumbnailResult = await generateThumbnailImage({ filePath });
       results.push(thumbnailResult);
+      if (thumbnailResult.thumbnailCreated) {
+        thumbnailsProcessed = true;
+      }
     }
   }
 
-  return results;
+  return { results, thumbnailsProcessed };
 };
 
 export const generateMapImage = async (
@@ -69,18 +73,18 @@ export const generateMapImage = async (
   }
 
   try {
-    const processingResults = await processDirectory(
-      resolvedDirectoryPath,
-      outputType
-    );
+    const { results: processingResults, thumbnailsProcessed } =
+      await processDirectory(resolvedDirectoryPath, outputType);
     const processedCount = processingResults.filter(
       (result) => result.status
     ).length;
     const errors = processingResults.filter((result) => !result.status);
+
     return {
       processedCount,
       errors: errors.length > 0,
       results: processingResults,
+      thumbnailsProcessed,
       errorDetails: errors.length > 0 ? errors : undefined,
     };
   } catch (error) {

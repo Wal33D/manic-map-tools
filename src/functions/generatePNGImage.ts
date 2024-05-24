@@ -17,6 +17,7 @@ export interface GeneratePNGResult {
   wallArrayGenerated: boolean;
   imageBufferCreated: boolean;
   fileSaved: boolean;
+  imageCreated: boolean;
   errorDetails?: {
     accessError?: string;
     parseError?: string;
@@ -41,6 +42,7 @@ export const generatePNGImage = async ({
   let wallArrayGenerated = false;
   let imageBufferCreated = false;
   let fileSaved = false;
+  let imageCreated = false;
   const errorDetails: GeneratePNGResult["errorDetails"] = {};
   let imageBuffer: Buffer | undefined;
 
@@ -54,15 +56,20 @@ export const generatePNGImage = async ({
   }
 
   try {
-    const parsedData = await parseMapDataFromFile({ filePath });
-    parseDataSuccess = true;
-    const wallArray = create2DArray(parsedData.tilesArray, parsedData.colcount);
-    wallArrayGenerated = true;
-    imageBuffer = await createPNGImageBuffer(wallArray, parsedData.biome);
-    imageBufferCreated = true;
-    await sharp(imageBuffer).toFile(screenshotFilePath);
-    fileSaved = true;
-
+    if (!fileAccessed) {
+      const parsedData = await parseMapDataFromFile({ filePath });
+      parseDataSuccess = true;
+      const wallArray = create2DArray(
+        parsedData.tilesArray,
+        parsedData.colcount
+      );
+      wallArrayGenerated = true;
+      imageBuffer = await createPNGImageBuffer(wallArray, parsedData.biome);
+      imageBufferCreated = true;
+      await sharp(imageBuffer).toFile(screenshotFilePath);
+      fileSaved = true;
+      imageCreated = true;
+    }
     return {
       status: true,
       filePath: screenshotFilePath,
@@ -71,6 +78,7 @@ export const generatePNGImage = async ({
       wallArrayGenerated,
       imageBufferCreated,
       fileSaved,
+      imageCreated,
       imageBuffer,
     };
   } catch (error: any) {
@@ -87,6 +95,7 @@ export const generatePNGImage = async ({
       wallArrayGenerated,
       imageBufferCreated,
       fileSaved,
+      imageCreated,
       errorDetails,
     };
   }
