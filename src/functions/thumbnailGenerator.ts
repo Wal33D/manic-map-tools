@@ -15,15 +15,13 @@ export const generateThumbnailImage = async ({
   outputFileName?: string;
 }): Promise<any> => {
   let status = false;
-  let message = "";
   const outputDir = path.dirname(filePath);
   const thumbnailPath = path.join(outputDir, outputFileName);
 
   try {
     await fs.access(thumbnailPath);
-    message = `Thumbnail already exists: ${thumbnailPath}`;
     status = true;
-    return { status, message, thumbnailPath };
+    return { status, thumbnailPath };
   } catch (accessError) {
     // Continue to generate thumbnail
   }
@@ -31,16 +29,12 @@ export const generateThumbnailImage = async ({
   try {
     const parsedData = await parseMapDataFromFile({ filePath });
     const wallArray = create2DArray(parsedData.tilesArray, parsedData.colcount);
-
     const thumbnail = await createThumbnailBuffer(wallArray);
     await sharp(thumbnail).toFile(thumbnailPath);
     status = true;
-    message = `Thumbnail saved as ${thumbnailPath}`;
-  } catch (error: any) {
-    message = `Error processing file: ${filePath}, ${error.message}`;
-  }
+  } catch (error: any) {}
 
-  return { status, message, thumbnailPath };
+  return { status, thumbnailPath };
 };
 
 const createThumbnailBuffer = async (wallArray: number[][]) => {

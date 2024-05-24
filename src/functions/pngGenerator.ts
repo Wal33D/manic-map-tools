@@ -17,26 +17,26 @@ export const generatePNGImage = async ({
   outputFileName?: string;
 }): Promise<any> => {
   const outputDir = path.dirname(filePath);
-  const outputFilePath = path.join(outputDir, outputFileName);
+  const screenshotFilePath = path.join(outputDir, outputFileName);
 
   try {
-    await fs.access(outputFilePath);
-    console.log("File already exists:", outputFilePath);
-    return { success: true, filePath: outputFilePath };
+    await fs.access(screenshotFilePath);
+    console.log("File already exists:", screenshotFilePath);
+    return { success: true, filePath: screenshotFilePath };
   } catch {}
 
   try {
     const parsedData = await parseMapDataFromFile({ filePath });
     const wallArray = create2DArray(parsedData.tilesArray, parsedData.colcount);
 
-    const image = await createPNGImageBuffer(wallArray, parsedData.biome);
-    await image.toFile(outputFilePath);
-    console.log(`Image saved as ${outputFilePath}`);
+    const imageBuffer = await createPNGImageBuffer(wallArray, parsedData.biome);
+    await sharp(imageBuffer).toFile(screenshotFilePath);
+    console.log(`Image saved as ${screenshotFilePath}`);
 
-    return { success: true, filePath: outputFilePath };
+    return { success: true, filePath: screenshotFilePath, imageBuffer };
   } catch (error) {
     console.error("Error processing file:", filePath, error);
-    return { success: false, filePath: outputFilePath };
+    return { success: false, filePath: screenshotFilePath };
   }
 };
 
@@ -65,10 +65,12 @@ const createPNGImageBuffer = async (
   );
   const finalCanvas = await image.toBuffer();
 
-  return await sharp(finalCanvas).resize(1280, 1280, {
-    fit: "contain",
-    background: { r: 0, g: 0, b: 0, alpha: 0.1 },
-  });
+  return await sharp(finalCanvas)
+    .resize(1280, 1280, {
+      fit: "contain",
+      background: { r: 0, g: 0, b: 0, alpha: 0.1 },
+    })
+    .toBuffer();
 };
 
 const renderMapTiles = async (
