@@ -30,6 +30,7 @@ export interface GenerateMapImageResult {
   pngsProcessed: boolean;
   updateNeeded: boolean;
   errorDetails?: GenerateImageResult[];
+  message: string;
 }
 
 export type GenerateMapImageParams = {

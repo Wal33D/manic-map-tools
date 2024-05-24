@@ -83,15 +83,16 @@ export const generateMapImage = async ({
   const resolvedDirectoryPath =
     directoryPath || process.env.HOGNOSE_MAP_CATALOG_DIR;
   if (!resolvedDirectoryPath) {
-    console.error(
-      "HOGNOSE_MAP_CATALOG_DIR is not defined in .env.local and no directory path was provided."
-    );
+    const message =
+      "HOGNOSE_MAP_CATALOG_DIR is not defined in .env.local and no directory path was provided.";
+    console.error(message);
     return {
       updateNeeded: false,
       processedCount: 0,
       thumbnailsProcessed: false,
       pngsProcessed: false,
       errors: true,
+      message,
     };
   }
 
@@ -111,22 +112,31 @@ export const generateMapImage = async ({
       (result) => result.status
     ).length;
     const errors = processingResults.filter((result) => !result.status);
+    const errorCount = errors.length;
+
+    const message =
+      errorCount > 0
+        ? `Processing completed with ${errorCount} errors.`
+        : "Processing completed successfully.";
 
     return {
       updateNeeded,
       processedCount,
       thumbnailsProcessed,
       pngsProcessed,
-      errors: errors.length > 0,
+      errors: errorCount > 0,
+      message,
     };
-  } catch (error) {
-    console.error("Error processing directory:", error);
+  } catch (error: any) {
+    const message = `Error processing directory: ${error.message}`;
+    console.error(message);
     return {
       updateNeeded: false,
       processedCount: 0,
       thumbnailsProcessed: false,
       pngsProcessed: false,
       errors: true,
+      message,
     };
   }
 };
