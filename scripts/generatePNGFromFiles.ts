@@ -150,7 +150,7 @@ const drawMapTiles = async (
     for (let x = 0; x < wallArray[0].length; x++) {
       const tile = wallArray[y][x];
       const color = colors[tile] || colors.default;
-      drawTile(ctx, x, y, scale, color);
+      drawTile(ctx, x, y, scale, color, tile);
     }
   }
 };
@@ -160,22 +160,32 @@ const drawTile = (
   x: number,
   y: number,
   scale: number,
-  color: Color
+  color: Color,
+  tile: number
 ) => {
+  const fallbackColor: Color = { r: 255, g: 0, b: 0, alpha: 1 };
+  const {
+    r = fallbackColor.r,
+    g = fallbackColor.g,
+    b = fallbackColor.b,
+    alpha = fallbackColor.alpha,
+  } = color || {};
+
+  if (color === undefined) {
+    console.warn(`Undefined color for tile: ${tile}`);
+  }
+
   const patternCanvas = createCanvas(scale, scale);
   const patternCtx = patternCanvas.getContext("2d");
 
   const tileGradient = patternCtx.createLinearGradient(0, 0, scale, scale);
-  tileGradient.addColorStop(
-    0,
-    `rgba(${color.r}, ${color.g}, ${color.b}, ${color.alpha})`
-  );
+  tileGradient.addColorStop(0, `rgba(${r}, ${g}, ${b}, ${alpha})`);
   tileGradient.addColorStop(
     1,
-    `rgba(${Math.max(0, color.r - 20)}, ${Math.max(
+    `rgba(${Math.max(0, r - 20)}, ${Math.max(0, g - 20)}, ${Math.max(
       0,
-      color.g - 20
-    )}, ${Math.max(0, color.b - 20)}, ${color.alpha})`
+      b - 20
+    )}, ${alpha})`
   );
   patternCtx.fillStyle = tileGradient;
   patternCtx.fillRect(0, 0, scale, scale);

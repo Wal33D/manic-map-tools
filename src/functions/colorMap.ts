@@ -21,6 +21,7 @@ export const colors: { [key: number | string]: Color | any } = {
   50: { r: 255, g: 255, b: 70 }, // Recharge Seam
   60: { r: 46, g: 23, b: 95, alpha: 0.1 }, // Landslide rubble
   61: { r: 46, g: 23, b: 95, alpha: 0.5 }, // Landslide rubble
+  62: { r: 46, g: 23, b: 95, alpha: 0.3 }, // Landslide rubble
   63: { r: 46, g: 23, b: 95 }, // Landslide rubble
   65: { r: 128, g: 0, b: 128 }, // Placeholder color
   101: { r: 124, g: 92, b: 70 }, // Ground
