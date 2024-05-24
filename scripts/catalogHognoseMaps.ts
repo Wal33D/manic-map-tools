@@ -48,7 +48,7 @@ const createCatalogData = (
   title: parsedData.levelname || datFile.replace(".dat", ""),
   postedDate: indexData.downloadedAt,
   author: "charredUtensil",
-  mainFile: datFile,
+  primaryAssets: datFile,
   thumbnail: "thumbnail_render.png",
   screenshot: "screenshot_render.png",
   shortDescription: generateShortDescription(parsedData),
