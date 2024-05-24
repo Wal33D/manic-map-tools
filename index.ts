@@ -4,11 +4,11 @@ import * as dotenv from "dotenv";
 import {
   generatePNGImage,
   GeneratePNGResult,
-} from "./src/functions/pngGenerator";
+} from "./src/functions/generatePNGImage";
 import {
   generateThumbnailImage,
   GenerateThumbnailResult,
-} from "./src/functions/thumbnailGenerator";
+} from "./src/functions/generateThumbnailImage";
 
 dotenv.config({ path: ".env.local" });
 
@@ -74,12 +74,14 @@ export const generateMapImage = async (
       outputType
     );
     const processedCount = processingResults.filter(
-      (result) => result.success
+      (result) => result.status
     ).length;
+    const errors = processingResults.filter((result) => !result.status);
     return {
       processedCount,
-      errors: processingResults.length !== processedCount,
+      errors: errors.length > 0,
       results: processingResults,
+      errorDetails: errors.length > 0 ? errors : undefined,
     };
   } catch (error) {
     console.error("Error processing directory:", error);

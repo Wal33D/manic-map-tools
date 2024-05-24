@@ -2,9 +2,11 @@ import fs from "fs/promises";
 import path from "path";
 import sharp from "sharp";
 import * as dotenv from "dotenv";
+import { Color } from "../types";
 import { colors } from "../utils/colorMap";
 import { parseMapDataFromFile } from "../fileParser/mapFileParser";
 import { createCanvas, CanvasRenderingContext2D } from "canvas";
+
 dotenv.config({ path: ".env.local" });
 
 export interface GenerateThumbnailResult {
@@ -23,6 +25,7 @@ export interface GenerateThumbnailResult {
   };
   imageBuffer?: Buffer;
 }
+
 export const generateThumbnailImage = async ({
   filePath,
   outputFileName = "thumbnail_render.png",
@@ -56,9 +59,9 @@ export const generateThumbnailImage = async ({
     parseDataSuccess = true;
     const wallArray = create2DArray(parsedData.tilesArray, parsedData.colcount);
     wallArrayGenerated = true;
-    const thumbnail = await createThumbnailBuffer(wallArray);
+    imageBuffer = await createThumbnailBuffer(wallArray);
     imageBufferCreated = true;
-    imageBuffer = await sharp(thumbnail).toFile(thumbnailPath);
+    await sharp(imageBuffer).toFile(thumbnailPath);
     fileSaved = true;
     status = true;
   } catch (error: any) {
@@ -74,13 +77,16 @@ export const generateThumbnailImage = async ({
     fileAccessed,
     parseDataSuccess,
     wallArrayGenerated,
+    imageBuffer,
     imageBufferCreated,
     fileSaved,
     errorDetails,
   };
 };
 
-const createThumbnailBuffer = async (wallArray: number[][]) => {
+const createThumbnailBuffer = async (
+  wallArray: number[][]
+): Promise<Buffer> => {
   const scale = 5;
   const width = wallArray.length;
   const height = wallArray[0].length;
@@ -106,7 +112,7 @@ const renderThumbnailTiles = async (
   for (let y = 0; y < wallArray.length; y++) {
     for (let x = 0; x < wallArray[0].length; x++) {
       const tile = wallArray[y][x];
-      const color = colors[tile] || { r: 255, g: 255, b: 255, a: 1 };
+      const color: Color = colors[tile] || { r: 255, g: 255, b: 255, a: 1 };
       drawThumbnailTile(ctx, x, y, scale, color);
     }
   }
@@ -117,9 +123,9 @@ const drawThumbnailTile = (
   x: number,
   y: number,
   scale: number,
-  color: { r: number; g: number; b: number; a: number }
+  color: Color
 ) => {
-  ctx.fillStyle = `rgba(${color.r}, ${color.g}, ${color.b}, ${color.a})`;
+  ctx.fillStyle = `rgba(${color.r}, ${color.g}, ${color.b}, ${color.alpha})`;
   ctx.fillRect(x * scale, y * scale, scale, scale);
 };
 

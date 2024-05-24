@@ -10,7 +10,7 @@ import { createCanvas, CanvasRenderingContext2D } from "canvas";
 dotenv.config({ path: ".env.local" });
 
 export interface GeneratePNGResult {
-  success: boolean;
+  status: boolean;
   filePath: string;
   fileAccessed: boolean;
   parseDataSuccess: boolean;
@@ -64,7 +64,7 @@ export const generatePNGImage = async ({
     fileSaved = true;
 
     return {
-      success: true,
+      status: true,
       filePath: screenshotFilePath,
       fileAccessed,
       parseDataSuccess,
@@ -80,7 +80,7 @@ export const generatePNGImage = async ({
     else errorDetails.saveError = error.message;
 
     return {
-      success: false,
+      status: false,
       filePath: screenshotFilePath,
       fileAccessed,
       parseDataSuccess,
@@ -120,7 +120,7 @@ const createPNGImageBuffer = async (
   return await sharp(finalCanvas)
     .resize(1280, 1280, {
       fit: "contain",
-      background: { r: 0, g: 0, b: 0, alpha: 0.1 },
+      background: { r: 0, g: 0, b: 0, a: 0.1 },
     })
     .toBuffer();
 };
