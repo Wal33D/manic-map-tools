@@ -2,9 +2,10 @@ import fs from "fs/promises";
 import path from "path";
 import * as dotenv from "dotenv";
 import { generatePNGImage } from "./src/functions/generatePNGImage";
-import { GenerateImageResult } from "./src/types";
 import { generateThumbnailImage } from "./src/functions/generateThumbnailImage";
-export { GenerateImageResult };
+import { GenerateImageResult, GenerateMapImageResult } from "./src/types";
+export { GenerateImageResult, GenerateMapImageResult } from "./src/types";
+
 dotenv.config({ path: ".env.local" });
 
 const findDatFiles = async (dir: string): Promise<string[]> => {
@@ -30,13 +31,13 @@ const processDirectory = async (
   results: GenerateImageResult[];
   thumbnailsProcessed: boolean;
   pngsProcessed: boolean;
-  anyImagesCreated: boolean;
+  updateNeeded: boolean;
 }> => {
   const datFiles = await findDatFiles(datDirectory);
   const results: GenerateImageResult[] = [];
   let thumbnailsProcessed = false;
   let pngsProcessed = false;
-  let anyImagesCreated = false;
+  let updateNeeded = false;
 
   for (const filePath of datFiles) {
     if (outputType === "png" || outputType === "both") {
@@ -44,7 +45,7 @@ const processDirectory = async (
       results.push(pngResult);
       if (pngResult.imageCreated) {
         pngsProcessed = true;
-        anyImagesCreated = true;
+        updateNeeded = true;
       }
     }
 
@@ -53,18 +54,18 @@ const processDirectory = async (
       results.push(thumbnailResult);
       if (thumbnailResult.imageCreated) {
         thumbnailsProcessed = true;
-        anyImagesCreated = true;
+        updateNeeded = true;
       }
     }
   }
 
-  return { results, thumbnailsProcessed, pngsProcessed, anyImagesCreated };
+  return { results, thumbnailsProcessed, pngsProcessed, updateNeeded };
 };
 
 export const generateMapImage = async (
   outputType: "png" | "thumbnail" | "both",
   directoryPath?: string
-) => {
+): Promise<GenerateMapImageResult> => {
   const resolvedDirectoryPath =
     directoryPath || process.env.HOGNOSE_MAP_CATALOG_DIR;
   if (!resolvedDirectoryPath) {
@@ -72,19 +73,20 @@ export const generateMapImage = async (
       "HOGNOSE_MAP_CATALOG_DIR is not defined in .env.local and no directory path was provided."
     );
     return {
-      message:
-        "HOGNOSE_MAP_CATALOG_DIR is not defined in .env.local and no directory path was provided.",
+      updateNeeded: false,
       processedCount: 0,
+      thumbnailsProcessed: false,
+      pngsProcessed: false,
       errors: true,
     };
   }
 
   try {
     const {
+      updateNeeded,
       results: processingResults,
       thumbnailsProcessed,
       pngsProcessed,
-      anyImagesCreated,
     } = await processDirectory(resolvedDirectoryPath, outputType);
     const processedCount = processingResults.filter(
       (result) => result.status
@@ -92,19 +94,19 @@ export const generateMapImage = async (
     const errors = processingResults.filter((result) => !result.status);
 
     return {
+      updateNeeded,
       processedCount,
-      errors: errors.length > 0,
-      results: processingResults,
       thumbnailsProcessed,
       pngsProcessed,
-      anyImagesCreated,
-      errorDetails: errors.length > 0 ? errors : undefined,
+      errors: errors.length > 0,
     };
   } catch (error) {
     console.error("Error processing directory:", error);
     return {
-      message: "Error processing directory",
       processedCount: 0,
+      updateNeeded: false,
+      thumbnailsProcessed: false,
+      pngsProcessed: false,
       errors: true,
     };
   }

@@ -22,3 +22,12 @@ export interface GenerateImageResult {
   };
   imageBuffer?: Buffer;
 }
+
+export interface GenerateMapImageResult {
+  processedCount: number;
+  errors: boolean;
+  thumbnailsProcessed: boolean;
+  pngsProcessed: boolean;
+  updateNeeded: boolean;
+  errorDetails?: GenerateImageResult[];
+}
