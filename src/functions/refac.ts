@@ -3,7 +3,7 @@ import * as path from "path";
 import * as dotenv from "dotenv";
 import axios from "axios";
 
-dotenv.config();
+dotenv.config({ path: ".env.local" });
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 const OPENAI_API_URL = "https://api.openai.com/v1/chat/completions";

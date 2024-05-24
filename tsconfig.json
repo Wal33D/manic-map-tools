@@ -17,14 +17,7 @@
     "*.js",
     "src/**/*.ts",
     "scripts/*.ts",
-    "scripts/*.js",
-    "scripts/uploadHognoseCatalog.ts",
-    "scripts/downloadCollectionFromMongoDB.ts",
-    "src/utils/colorMap.ts",
-    "src/utils/averageMapSize.ts",
-    "src/utils/cleanMapFile.ts",
-    "src/utils/logMapDataStats.ts",
-    "src/utils/mapIntegrityCheck.ts",
-    "src/utils/minifyProject.ts"
+    "src/functions/*.js",
+    "src/functions/*.ts"
   ]
 }
