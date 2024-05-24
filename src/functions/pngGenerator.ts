@@ -16,54 +16,28 @@ export const generatePNGImage = async ({
   filePath: string;
   outputFileName?: string;
 }): Promise<any> => {
-  let status = false;
-  let message = "";
-  let imageResult = null;
-  let parsedData = null;
-  let wallArray = null;
-
   const outputDir = path.dirname(filePath);
   const outputFilePath = path.join(outputDir, outputFileName);
 
   try {
     await fs.access(outputFilePath);
-    message = `File already exists: ${outputFilePath}`;
-    status = true;
-    return {
-      status,
-      message,
-      filePath: outputFilePath,
-      imageResult,
-      wallArray,
-      parsedData,
-    };
-  } catch (accessError) {
-    // Continue to generate image
-  }
+    console.log("File already exists:", outputFilePath);
+    return { success: true, filePath: outputFilePath };
+  } catch {}
 
   try {
-    parsedData = await parseMapDataFromFile({ filePath });
-    wallArray = create2DArray(parsedData.tilesArray, parsedData.colcount);
+    const parsedData = await parseMapDataFromFile({ filePath });
+    const wallArray = create2DArray(parsedData.tilesArray, parsedData.colcount);
 
-    const imageBuffer: any = await createPNGImageBuffer(
-      wallArray,
-      parsedData.biome
-    );
-    imageResult = await sharp(imageBuffer).toFile(outputFilePath);
-    status = true;
-    message = `Image saved as ${outputFilePath}`;
-  } catch (error: any) {
-    message = `Error processing file: ${filePath}, ${error.message}`;
+    const image = await createPNGImageBuffer(wallArray, parsedData.biome);
+    await image.toFile(outputFilePath);
+    console.log(`Image saved as ${outputFilePath}`);
+
+    return { success: true, filePath: outputFilePath };
+  } catch (error) {
+    console.error("Error processing file:", filePath, error);
+    return { success: false, filePath: outputFilePath };
   }
-
-  return {
-    status,
-    message,
-    filePath: outputFilePath,
-    imageResult,
-    wallArray,
-    parsedData,
-  };
 };
 
 const createPNGImageBuffer = async (
