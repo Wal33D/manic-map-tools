@@ -30,7 +30,9 @@ const findDatFiles = async (dir: string): Promise<string[]> => {
 
 const processDirectory = async (
   datDirectory: string,
-  outputType: "png" | "thumbnail" | "both"
+  type: "png" | "thumbnail" | "both",
+  screenshotFileName?: string,
+  thumbnailFileName?: string
 ): Promise<{
   results: GenerateImageResult[];
   thumbnailsProcessed: boolean;
@@ -44,8 +46,11 @@ const processDirectory = async (
   let updateNeeded = false;
 
   for (const filePath of datFiles) {
-    if (outputType === "png" || outputType === "both") {
-      const pngResult = await generatePNGImage({ filePath });
+    if (type === "png" || type === "both") {
+      const pngResult = await generatePNGImage({
+        filePath,
+        outputFileName: screenshotFileName,
+      });
       results.push(pngResult);
       if (pngResult.imageCreated) {
         pngsProcessed = true;
@@ -53,8 +58,11 @@ const processDirectory = async (
       }
     }
 
-    if (outputType === "thumbnail" || outputType === "both") {
-      const thumbnailResult = await generateThumbnailImage({ filePath });
+    if (type === "thumbnail" || type === "both") {
+      const thumbnailResult = await generateThumbnailImage({
+        filePath,
+        outputFileName: thumbnailFileName,
+      });
       results.push(thumbnailResult);
       if (thumbnailResult.imageCreated) {
         thumbnailsProcessed = true;
@@ -67,8 +75,10 @@ const processDirectory = async (
 };
 
 export const generateMapImage = async ({
-  outputType,
+  type,
   directoryPath,
+  screenshotFileName,
+  thumbnailFileName,
 }: GenerateMapImageParams): Promise<GenerateMapImageResult> => {
   const resolvedDirectoryPath =
     directoryPath || process.env.HOGNOSE_MAP_CATALOG_DIR;
@@ -91,7 +101,12 @@ export const generateMapImage = async ({
       results: processingResults,
       thumbnailsProcessed,
       pngsProcessed,
-    } = await processDirectory(resolvedDirectoryPath, outputType);
+    } = await processDirectory(
+      resolvedDirectoryPath,
+      type,
+      screenshotFileName,
+      thumbnailFileName
+    );
     const processedCount = processingResults.filter(
       (result) => result.status
     ).length;

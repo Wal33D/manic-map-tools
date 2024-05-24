@@ -33,6 +33,8 @@ export interface GenerateMapImageResult {
 }
 
 export type GenerateMapImageParams = {
-  outputType: "png" | "thumbnail" | "both";
+  type: "png" | "thumbnail" | "both";
   directoryPath?: string;
+  screenshotFileName?: string;
+  thumbnailFileName?: string;
 };
