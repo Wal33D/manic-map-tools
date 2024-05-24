@@ -10,7 +10,10 @@ dotenv.config({ path: ".env.local" });
 
 const fs = require("fs").promises;
 
-const generatePNGFromFiles = async (filePaths: string[] | string) => {
+const generatePNGFromFiles = async (
+  filePaths: string[] | string,
+  outputType: "png" | "thumbnail" | "both"
+) => {
   const files = Array.isArray(filePaths) ? filePaths : [filePaths];
   const results = [];
 
@@ -32,14 +35,24 @@ const generatePNGFromFiles = async (filePaths: string[] | string) => {
         parsedData.tilesArray,
         parsedData.colcount
       );
-      const image = await generatePNG(wallArray, parsedData.biome);
-      await image.toFile(outputFilePath);
-      const thumbnail = await generateThumbnail(wallArray);
-      await sharp(thumbnail).toFile(thumbnailPath);
-      console.log(
-        `Image and thumbnail saved as ${outputFilePath} and ${thumbnailPath}`
-      );
-      results.push({ success: true, filePath: outputFilePath, thumbnailPath });
+
+      if (outputType === "png" || outputType === "both") {
+        const image = await generatePNG(wallArray, parsedData.biome);
+        await image.toFile(outputFilePath);
+        console.log(`Image saved as ${outputFilePath}`);
+      }
+
+      if (outputType === "thumbnail" || outputType === "both") {
+        const thumbnail = await generateThumbnail(wallArray);
+        await sharp(thumbnail).toFile(thumbnailPath);
+        console.log(`Thumbnail saved as ${thumbnailPath}`);
+      }
+
+      results.push({
+        success: true,
+        filePath: outputType === "png" ? outputFilePath : undefined,
+        thumbnailPath: outputType === "thumbnail" ? thumbnailPath : undefined,
+      });
     } catch (error) {
       console.error("Error processing file:", filePath, error);
       results.push({ success: false, filePath: outputFilePath });
@@ -65,9 +78,12 @@ const findAllDatFiles = async (dir: string): Promise<string[]> => {
   return results;
 };
 
-const processDirectory = async (datDirectory: string) => {
+const processDirectory = async (
+  datDirectory: string,
+  outputType: "png" | "thumbnail" | "both"
+) => {
   const datFiles = await findAllDatFiles(datDirectory);
-  return await generatePNGFromFiles(datFiles);
+  return await generatePNGFromFiles(datFiles, outputType);
 };
 
 const generatePNG = async (wallArray: number[][], biome = "default") => {
@@ -267,7 +283,7 @@ const processImage = async (
   return image;
 };
 
-export const initProcess = async () => {
+export const initProcess = async (outputType: "png" | "thumbnail" | "both") => {
   const directoryPath = process.env.HOGNOSE_MAP_CATALOG_DIR;
   if (!directoryPath) {
     console.error("HOGNOSE_MAP_CATALOG_DIR is not defined in .env.local");
@@ -279,7 +295,7 @@ export const initProcess = async () => {
   }
 
   try {
-    const processingResults = await processDirectory(directoryPath);
+    const processingResults = await processDirectory(directoryPath, outputType);
     const processedCount = processingResults.filter(
       (result) => result.success
     ).length;

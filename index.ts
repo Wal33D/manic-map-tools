@@ -4,7 +4,7 @@ import { initProcess } from "./scripts/generatePNGFromFiles";
 dotenv.config({ path: ".env.local" });
 
 async function init() {
-  await initProcess();
+  await initProcess("thumbnail");
   console.log("========== Manic Miners Tools Overview ==========\n");
 
   console.log("Project Name: Manic Miners Tools");
