@@ -10,7 +10,7 @@ const DB_PASSWORD = process.env.DB_PASSWORD;
 const DB_CLUSTER = process.env.DB_CLUSTER;
 const DATABASE_NAME = process.env.DATABASE_NAME || "levelsCatalogDB";
 
-const ROOT_DIRECTORY_PATH = process.env.HOGNOSE_LEVELS_CATALOG_DIR;
+const ROOT_DIRECTORY_PATH: any = process.env.HOGNOSE_LEVELS_CATALOG_DIR;
 
 if (!DB_USERNAME || !DB_PASSWORD || !DB_CLUSTER || !ROOT_DIRECTORY_PATH) {
   console.error(

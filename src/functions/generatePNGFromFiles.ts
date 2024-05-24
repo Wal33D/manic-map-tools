@@ -10,7 +10,7 @@ dotenv.config({ path: ".env.local" });
 
 const fs = require("fs").promises;
 
-const generatePNGFromFiles = async (
+const generateImagesFromFiles = async (
   filePaths: string[] | string,
   outputType: "png" | "thumbnail" | "both"
 ) => {
@@ -37,13 +37,13 @@ const generatePNGFromFiles = async (
       );
 
       if (outputType === "png" || outputType === "both") {
-        const image = await generatePNG(wallArray, parsedData.biome);
+        const image = await createPNGImage(wallArray, parsedData.biome);
         await image.toFile(outputFilePath);
         console.log(`Image saved as ${outputFilePath}`);
       }
 
       if (outputType === "thumbnail" || outputType === "both") {
-        const thumbnail = await generateThumbnail(wallArray);
+        const thumbnail = await createThumbnailImage(wallArray);
         await sharp(thumbnail).toFile(thumbnailPath);
         console.log(`Thumbnail saved as ${thumbnailPath}`);
       }
@@ -62,14 +62,14 @@ const generatePNGFromFiles = async (
   return results;
 };
 
-const findAllDatFiles = async (dir: string): Promise<string[]> => {
+const findDatFiles = async (dir: string): Promise<string[]> => {
   const results: string[] = [];
   const entries = await fs.readdir(dir, { withFileTypes: true });
 
   for (const entry of entries) {
     const fullPath = path.join(dir, entry.name);
     if (entry.isDirectory()) {
-      results.push(...(await findAllDatFiles(fullPath)));
+      results.push(...(await findDatFiles(fullPath)));
     } else if (entry.isFile() && entry.name.endsWith(".dat")) {
       results.push(fullPath);
     }
@@ -78,28 +78,28 @@ const findAllDatFiles = async (dir: string): Promise<string[]> => {
   return results;
 };
 
-const processDirectory = async (
+const processDatDirectory = async (
   datDirectory: string,
   outputType: "png" | "thumbnail" | "both"
 ) => {
-  const datFiles = await findAllDatFiles(datDirectory);
-  return await generatePNGFromFiles(datFiles, outputType);
+  const datFiles = await findDatFiles(datDirectory);
+  return await generateImagesFromFiles(datFiles, outputType);
 };
 
-const generatePNG = async (wallArray: number[][], biome = "default") => {
+const createPNGImage = async (wallArray: number[][], biome = "default") => {
   const scale = 17;
   const width = wallArray.length;
   const height = wallArray[0].length;
   const canvas = createCanvas(width * scale, height * scale);
   const ctx = canvas.getContext("2d");
 
-  await drawMapTiles(ctx, wallArray, scale);
+  await renderMapTiles(ctx, wallArray, scale);
   const buffer = canvas.toBuffer("image/png");
   const frameWidth = 1280;
   const frameHeight = 1080;
   const padding = 25;
 
-  const image = await processImage(
+  const image = await processImageBuffer(
     buffer,
     frameWidth,
     frameHeight,
@@ -114,14 +114,14 @@ const generatePNG = async (wallArray: number[][], biome = "default") => {
   });
 };
 
-const generateThumbnail = async (wallArray: number[][]) => {
+const createThumbnailImage = async (wallArray: number[][]) => {
   const scale = 5;
   const width = wallArray.length;
   const height = wallArray[0].length;
   const canvas = createCanvas(width * scale, height * scale);
   const ctx = canvas.getContext("2d");
 
-  await drawMapThumbTiles(ctx, wallArray, scale);
+  await renderThumbnailTiles(ctx, wallArray, scale);
   const buffer = canvas.toBuffer("image/png");
 
   return await sharp(buffer)
@@ -132,7 +132,7 @@ const generateThumbnail = async (wallArray: number[][]) => {
     .toBuffer();
 };
 
-const drawMapThumbTiles = async (
+const renderThumbnailTiles = async (
   ctx: CanvasRenderingContext2D,
   wallArray: number[][],
   scale: number
@@ -141,12 +141,12 @@ const drawMapThumbTiles = async (
     for (let x = 0; x < wallArray[0].length; x++) {
       const tile = wallArray[y][x];
       const color = colors[tile] || { r: 255, g: 255, b: 255, a: 1 };
-      drawThumbTile(ctx, x, y, scale, color);
+      drawThumbnailTile(ctx, x, y, scale, color);
     }
   }
 };
 
-const drawThumbTile = (
+const drawThumbnailTile = (
   ctx: CanvasRenderingContext2D,
   x: number,
   y: number,
@@ -157,7 +157,7 @@ const drawThumbTile = (
   ctx.fillRect(x * scale, y * scale, scale, scale);
 };
 
-const drawMapTiles = async (
+const renderMapTiles = async (
   ctx: CanvasRenderingContext2D,
   wallArray: number[][],
   scale: number
@@ -166,12 +166,12 @@ const drawMapTiles = async (
     for (let x = 0; x < wallArray[0].length; x++) {
       const tile = wallArray[y][x];
       const color = colors[tile] || colors.default;
-      drawTile(ctx, x, y, scale, color, tile);
+      drawMapTile(ctx, x, y, scale, color, tile);
     }
   }
 };
 
-const drawTile = (
+const drawMapTile = (
   ctx: CanvasRenderingContext2D,
   x: number,
   y: number,
@@ -249,7 +249,7 @@ const create2DArray = (data: number[], width: number): number[][] => {
   return result;
 };
 
-const processImage = async (
+const processImageBuffer = async (
   buffer: sharp.SharpOptions | Buffer | any,
   frameWidth: number,
   frameHeight: number,
@@ -283,7 +283,9 @@ const processImage = async (
   return image;
 };
 
-export const initProcess = async (outputType: "png" | "thumbnail" | "both") => {
+export const startImageProcessing = async (
+  outputType: "png" | "thumbnail" | "both"
+) => {
   const directoryPath = process.env.HOGNOSE_MAP_CATALOG_DIR;
   if (!directoryPath) {
     console.error("HOGNOSE_MAP_CATALOG_DIR is not defined in .env.local");
@@ -295,7 +297,10 @@ export const initProcess = async (outputType: "png" | "thumbnail" | "both") => {
   }
 
   try {
-    const processingResults = await processDirectory(directoryPath, outputType);
+    const processingResults = await processDatDirectory(
+      directoryPath,
+      outputType
+    );
     const processedCount = processingResults.filter(
       (result) => result.success
     ).length;
