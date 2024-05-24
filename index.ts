@@ -35,15 +35,15 @@ const processDirectory = async (
   thumbnailFileName?: string
 ): Promise<{
   results: GenerateImageResult[];
-  thumbnailsProcessed: boolean;
-  pngsProcessed: boolean;
+  processedCount: number;
+  totalCount: number;
   updateNeeded: boolean;
 }> => {
   const datFiles = await findDatFiles(datDirectory);
+  const totalCount = datFiles.length;
   const results: GenerateImageResult[] = [];
-  let thumbnailsProcessed = false;
-  let pngsProcessed = false;
   let updateNeeded = false;
+  let processedCount = 0;
 
   for (const filePath of datFiles) {
     if (type === "png" || type === "both") {
@@ -53,8 +53,8 @@ const processDirectory = async (
       });
       results.push(pngResult);
       if (pngResult.imageCreated) {
-        pngsProcessed = true;
         updateNeeded = true;
+        processedCount += 1;
       }
     }
 
@@ -65,13 +65,13 @@ const processDirectory = async (
       });
       results.push(thumbnailResult);
       if (thumbnailResult.imageCreated) {
-        thumbnailsProcessed = true;
         updateNeeded = true;
+        processedCount += 1;
       }
     }
   }
 
-  return { results, thumbnailsProcessed, pngsProcessed, updateNeeded };
+  return { results, processedCount, totalCount, updateNeeded };
 };
 
 export const generateMapImage = async ({
@@ -89,8 +89,7 @@ export const generateMapImage = async ({
     return {
       updateNeeded: false,
       processedCount: 0,
-      thumbnailsProcessed: false,
-      pngsProcessed: false,
+      totalCount: 0,
       errors: true,
       message,
     };
@@ -100,17 +99,14 @@ export const generateMapImage = async ({
     const {
       updateNeeded,
       results: processingResults,
-      thumbnailsProcessed,
-      pngsProcessed,
+      processedCount,
+      totalCount,
     } = await processDirectory(
       resolvedDirectoryPath,
       type,
       screenshotFileName,
       thumbnailFileName
     );
-    const processedCount = processingResults.filter(
-      (result) => result.status
-    ).length;
     const errors = processingResults.filter((result) => !result.status);
     const errorCount = errors.length;
 
@@ -122,8 +118,7 @@ export const generateMapImage = async ({
     return {
       updateNeeded,
       processedCount,
-      thumbnailsProcessed,
-      pngsProcessed,
+      totalCount,
       errors: errorCount > 0,
       message,
     };
@@ -133,8 +128,7 @@ export const generateMapImage = async ({
     return {
       updateNeeded: false,
       processedCount: 0,
-      thumbnailsProcessed: false,
-      pngsProcessed: false,
+      totalCount: 0,
       errors: true,
       message,
     };

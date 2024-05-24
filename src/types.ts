@@ -26,8 +26,6 @@ export interface GenerateImageResult {
 export interface GenerateMapImageResult {
   processedCount: number;
   errors: boolean;
-  thumbnailsProcessed: boolean;
-  pngsProcessed: boolean;
   updateNeeded: boolean;
   errorDetails?: GenerateImageResult[];
   message: string;
