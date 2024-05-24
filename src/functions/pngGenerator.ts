@@ -1,37 +1,65 @@
-import * as dotenv from "dotenv";
+import fs from "fs/promises";
 import path from "path";
 import sharp from "sharp";
-import { createCanvas, CanvasRenderingContext2D } from "canvas";
-import { parseMapDataFromFile } from "../fileParser/mapFileParser";
+import * as dotenv from "dotenv";
 import { Color } from "../types";
 import { colors } from "../utils/colorMap";
-import fs from "fs/promises";
+import { parseMapDataFromFile } from "../fileParser/mapFileParser";
+import { createCanvas, CanvasRenderingContext2D } from "canvas";
 
 dotenv.config({ path: ".env.local" });
 
-const generatePNGImage = async (filePath: string) => {
+export const generatePNGImage = async ({
+  filePath,
+  outputFileName = "screenshot_render.png",
+}: {
+  filePath: string;
+  outputFileName?: string;
+}) => {
+  let status = false;
+  let message = "";
+  let imageResult = null;
+  let parsedData = null;
+  let wallArray = null;
+
   const outputDir = path.dirname(filePath);
-  const outputFilePath = path.join(outputDir, "screenshot_render.png");
+  const outputFilePath = path.join(outputDir, outputFileName);
 
   try {
     await fs.access(outputFilePath);
-    console.log("File already exists:", outputFilePath);
-    return { success: true, filePath: outputFilePath };
-  } catch {}
+    message = `File already exists: ${outputFilePath}`;
+    status = true;
+    return {
+      status,
+      message,
+      filePath: outputFilePath,
+      imageResult,
+      wallArray,
+      parsedData,
+    };
+  } catch (accessError) {
+    // Continue to generate image
+  }
 
   try {
-    const parsedData = await parseMapDataFromFile({ filePath });
-    const wallArray = create2DArray(parsedData.tilesArray, parsedData.colcount);
-
+    parsedData = await parseMapDataFromFile({ filePath });
+    wallArray = create2DArray(parsedData.tilesArray, parsedData.colcount);
     const image = await createPNGImageBuffer(wallArray, parsedData.biome);
-    await image.toFile(outputFilePath);
-    console.log(`Image saved as ${outputFilePath}`);
-
-    return { success: true, filePath: outputFilePath };
-  } catch (error) {
-    console.error("Error processing file:", filePath, error);
-    return { success: false, filePath: outputFilePath };
+    imageResult = await image.toFile(outputFilePath);
+    status = true;
+    message = `Image saved as ${outputFilePath}`;
+  } catch (error: any) {
+    message = `Error processing file: ${filePath}, ${error.message}`;
   }
+
+  return {
+    status,
+    message,
+    filePath: outputFilePath,
+    imageResult,
+    wallArray,
+    parsedData,
+  };
 };
 
 const createPNGImageBuffer = async (
@@ -191,5 +219,3 @@ const processImageBuffer = async (
 
   return image;
 };
-
-export { generatePNGImage };

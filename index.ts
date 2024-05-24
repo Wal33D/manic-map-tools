@@ -31,12 +31,12 @@ const processDirectory = async (
 
   for (const filePath of datFiles) {
     if (outputType === "png" || outputType === "both") {
-      const pngResult = await generatePNGImage(filePath);
+      const pngResult = await generatePNGImage({ filePath });
       results.push(pngResult);
     }
 
     if (outputType === "thumbnail" || outputType === "both") {
-      const thumbnailResult = await generateThumbnailImage(filePath);
+      const thumbnailResult = await generateThumbnailImage({ filePath });
       results.push(thumbnailResult);
     }
   }
@@ -59,6 +59,7 @@ export const generateMapImage = async (
         "HOGNOSE_MAP_CATALOG_DIR is not defined in .env.local and no directory path was provided.",
       processedCount: 0,
       errors: true,
+      results: [],
     };
   }
 
@@ -68,17 +69,23 @@ export const generateMapImage = async (
       outputType
     );
     const processedCount = processingResults.filter(
-      (result) => result.success
+      (result) => result.status
     ).length;
     const message = "Processing completed";
     console.log(processingResults);
-    return { message, processedCount, errors: false };
+    return {
+      message,
+      processedCount,
+      errors: false,
+      results: processingResults,
+    };
   } catch (error) {
     console.error("Error processing directory:", error);
     return {
       message: "Error processing directory",
       processedCount: 0,
       errors: true,
+      results: [],
     };
   }
 };
