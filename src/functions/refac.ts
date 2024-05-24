@@ -38,6 +38,11 @@ const writeFile = (filePath: string, content: string): Promise<void> => {
   });
 };
 
+const parseResponseContent = (content: string): string => {
+  const match = content.match(/```typescript\n([\s\S]*?)\n```/);
+  return match ? match[1] : content;
+};
+
 const refactorCode = async (
   content: string,
   instructions: string
@@ -50,7 +55,8 @@ const refactorCode = async (
         messages: [
           {
             role: "system",
-            content: "You are a helpful assistant that refactors code.",
+            content:
+              "You are a helpful assistant that refactors code and should respond with only the code surrounded by ```typescript before and ``` after as your output will be directly saved to a .ts file. It should be compilable.",
           },
           { role: "user", content: instructions },
           { role: "user", content: content },
@@ -63,7 +69,8 @@ const refactorCode = async (
         },
       }
     );
-    return response.data.choices[0].message.content;
+    const responseContent = response.data.choices[0].message.content;
+    return parseResponseContent(responseContent);
   } catch (error) {
     throw new Error(`Failed to refactor code: ${error.message}`);
   }
@@ -90,7 +97,7 @@ const recursiveRefactor = async (
 
 // Example usage
 const instructions =
-  "Please refactor this code for readability, performance, and maintainability.";
+  "Please refactor this file to use es6 style pointer/arrow functions and modern convestions wherever possible without modyfing our end functionality plz ";
 const filePath = path.join(
   "C:\\Users\\Aquataze\\Desktop\\node-manic-map-viewer\\src\\functions\\generatePNGFromFiles.ts"
 );
