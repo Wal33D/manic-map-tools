@@ -2,7 +2,6 @@ import fs from "fs/promises";
 import path from "path";
 import sharp from "sharp";
 import * as dotenv from "dotenv";
-import { Color } from "../types";
 import { colors } from "../utils/colorMap";
 import { parseMapDataFromFile } from "../fileParser/mapFileParser";
 import { createCanvas, CanvasRenderingContext2D } from "canvas";
@@ -84,9 +83,7 @@ export const generateThumbnailImage = async ({
   };
 };
 
-const createThumbnailBuffer = async (
-  wallArray: number[][]
-): Promise<Buffer> => {
+const createThumbnailBuffer = async (wallArray: number[][]) => {
   const scale = 5;
   const width = wallArray.length;
   const height = wallArray[0].length;
@@ -112,7 +109,7 @@ const renderThumbnailTiles = async (
   for (let y = 0; y < wallArray.length; y++) {
     for (let x = 0; x < wallArray[0].length; x++) {
       const tile = wallArray[y][x];
-      const color: Color = colors[tile] || { r: 255, g: 255, b: 255, a: 1 };
+      const color = colors[tile] || { r: 255, g: 255, b: 255, a: 1 };
       drawThumbnailTile(ctx, x, y, scale, color);
     }
   }
@@ -123,9 +120,9 @@ const drawThumbnailTile = (
   x: number,
   y: number,
   scale: number,
-  color: Color
+  color: { r: number; g: number; b: number; a: number }
 ) => {
-  ctx.fillStyle = `rgba(${color.r}, ${color.g}, ${color.b}, ${color.alpha})`;
+  ctx.fillStyle = `rgba(${color.r}, ${color.g}, ${color.b}, ${color.a})`;
   ctx.fillRect(x * scale, y * scale, scale, scale);
 };
 

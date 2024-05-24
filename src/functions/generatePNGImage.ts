@@ -120,7 +120,7 @@ const createPNGImageBuffer = async (
   return await sharp(finalCanvas)
     .resize(1280, 1280, {
       fit: "contain",
-      background: { r: 0, g: 0, b: 0, a: 0.1 },
+      background: { r: 0, g: 0, b: 0, alpha: 0.1 },
     })
     .toBuffer();
 };
