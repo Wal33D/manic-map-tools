@@ -5,13 +5,12 @@ import { createCanvas, CanvasRenderingContext2D } from "canvas";
 import { parseMapDataFromFile } from "../fileParser/mapFileParser";
 import { Color } from "../src/types/types";
 import { colors } from "../src/functions/colorMap";
+
 dotenv.config({ path: ".env.local" });
 
 const fs = require("fs").promises;
 
-export async function generatePNGFromFiles(
-  filePaths: string[] | string
-): Promise<{ success: boolean; filePath: string; thumbnailPath?: string }[]> {
+const generatePNGFromFiles = async (filePaths: string[] | string) => {
   const files = Array.isArray(filePaths) ? filePaths : [filePaths];
   const results = [];
 
@@ -29,17 +28,14 @@ export async function generatePNGFromFiles(
 
     try {
       const parsedData = await parseMapDataFromFile({ filePath });
-      const wallArray = create2DArray({
-        data: parsedData.tilesArray,
-        width: parsedData.colcount,
-      });
-
+      const wallArray = create2DArray(
+        parsedData.tilesArray,
+        parsedData.colcount
+      );
       const image = await generatePNG(wallArray, parsedData.biome);
       await image.toFile(outputFilePath);
-
       const thumbnail = await generateThumbnail(wallArray);
       await sharp(thumbnail).toFile(thumbnailPath);
-
       console.log(
         `Image and thumbnail saved as ${outputFilePath} and ${thumbnailPath}`
       );
@@ -51,44 +47,30 @@ export async function generatePNGFromFiles(
   }
 
   return results;
-}
+};
 
-async function findAllDatFiles(dir: string): Promise<string[]> {
-  let results: string[] = [];
+const findAllDatFiles = async (dir: string): Promise<string[]> => {
+  const results: string[] = [];
   const entries = await fs.readdir(dir, { withFileTypes: true });
 
   for (const entry of entries) {
     const fullPath = path.join(dir, entry.name);
     if (entry.isDirectory()) {
-      results = results.concat(await findAllDatFiles(fullPath));
+      results.push(...(await findAllDatFiles(fullPath)));
     } else if (entry.isFile() && entry.name.endsWith(".dat")) {
       results.push(fullPath);
     }
   }
 
   return results;
-}
+};
 
-export async function processDirectory(datDirectory: string) {
+const processDirectory = async (datDirectory: string) => {
   const datFiles = await findAllDatFiles(datDirectory);
   return await generatePNGFromFiles(datFiles);
-}
+};
 
-export async function test() {
-  const directoryPath = process.env.HOGNOSE_MAP_CATALOG_DIR;
-  if (directoryPath) {
-    const processingResults = await processDirectory(directoryPath);
-    console.log(processingResults);
-  } else {
-    console.error("HOGNOSE_MAP_CATALOG_DIR is not defined in .env.local");
-  }
-}
-
-// generatePNG.ts
-export async function generatePNG(
-  wallArray: string | any[],
-  biome = "default"
-) {
+const generatePNG = async (wallArray: number[][], biome = "default") => {
   const scale = 17;
   const width = wallArray.length;
   const height = wallArray[0].length;
@@ -108,17 +90,15 @@ export async function generatePNG(
     padding,
     biome
   );
-
   const finalCanvas = await image.toBuffer();
 
   return await sharp(finalCanvas).resize(1280, 1280, {
     fit: "contain",
     background: { r: 0, g: 0, b: 0, alpha: 0.1 },
   });
-}
+};
 
-// generateThumbnail.ts
-export async function generateThumbnail(wallArray: string | any[]) {
+const generateThumbnail = async (wallArray: number[][]) => {
   const scale = 5;
   const width = wallArray.length;
   const height = wallArray[0].length;
@@ -134,13 +114,13 @@ export async function generateThumbnail(wallArray: string | any[]) {
       background: { r: 0, g: 0, b: 0, alpha: 0.1 },
     })
     .toBuffer();
-}
+};
 
-async function drawMapThumbTiles(
+const drawMapThumbTiles = async (
   ctx: CanvasRenderingContext2D,
-  wallArray: string | any[],
+  wallArray: number[][],
   scale: number
-) {
+) => {
   for (let y = 0; y < wallArray.length; y++) {
     for (let x = 0; x < wallArray[0].length; x++) {
       const tile = wallArray[y][x];
@@ -148,25 +128,24 @@ async function drawMapThumbTiles(
       drawThumbTile(ctx, x, y, scale, color);
     }
   }
-}
+};
 
-function drawThumbTile(
+const drawThumbTile = (
   ctx: CanvasRenderingContext2D,
-  y: number,
   x: number,
+  y: number,
   scale: number,
   color: { r: number; g: number; b: number; a: number }
-) {
+) => {
   ctx.fillStyle = `rgba(${color.r}, ${color.g}, ${color.b}, ${color.a})`;
   ctx.fillRect(x * scale, y * scale, scale, scale);
-}
+};
 
-// drawMapTiles.ts
-export async function drawMapTiles(
+const drawMapTiles = async (
   ctx: CanvasRenderingContext2D,
-  wallArray: string | any[],
+  wallArray: number[][],
   scale: number
-) {
+) => {
   for (let y = 0; y < wallArray.length; y++) {
     for (let x = 0; x < wallArray[0].length; x++) {
       const tile = wallArray[y][x];
@@ -174,16 +153,15 @@ export async function drawMapTiles(
       drawTile(ctx, x, y, scale, color);
     }
   }
-}
+};
 
-// drawTile.ts
-export function drawTile(
+const drawTile = (
   ctx: CanvasRenderingContext2D,
-  i: number,
-  j: number,
+  x: number,
+  y: number,
   scale: number,
   color: Color
-) {
+) => {
   const patternCanvas = createCanvas(scale, scale);
   const patternCtx = patternCanvas.getContext("2d");
 
@@ -222,44 +200,36 @@ export function drawTile(
 
   const pattern = ctx.createPattern(patternCanvas, "repeat");
   ctx.fillStyle = pattern;
-  ctx.fillRect(j * scale, i * scale, scale, scale);
+  ctx.fillRect(x * scale, y * scale, scale, scale);
 
   ctx.strokeStyle = "rgba(255, 255, 255, 0.8)";
   ctx.beginPath();
-  ctx.moveTo(j * scale, i * scale + scale);
-  ctx.lineTo(j * scale, i * scale);
-  ctx.lineTo(j * scale + scale, i * scale);
+  ctx.moveTo(x * scale, y * scale + scale);
+  ctx.lineTo(x * scale, y * scale);
+  ctx.lineTo(x * scale + scale, y * scale);
   ctx.stroke();
 
   ctx.shadowColor = "transparent";
   ctx.shadowBlur = 0;
   ctx.shadowOffsetX = 0;
   ctx.shadowOffsetY = 0;
-}
+};
 
-// create2DArray.ts
-export function create2DArray({
-  data,
-  width,
-}: {
-  data: number[];
-  width: number;
-}): number[][] {
-  let result: number[][] = [];
+const create2DArray = (data: number[], width: number): number[][] => {
+  const result: number[][] = [];
   for (let i = 0; i < data.length; i += width) {
     result.push(data.slice(i, i + width));
   }
   return result;
-}
+};
 
-// processImage.ts
-export async function processImage(
+const processImage = async (
   buffer: sharp.SharpOptions | Buffer | any,
   frameWidth: number,
   frameHeight: number,
   padding: number,
   biome: string
-) {
+) => {
   let image = sharp(buffer).sharpen();
 
   image = await image.resize(
@@ -285,4 +255,33 @@ export async function processImage(
   }
 
   return image;
-}
+};
+
+export const initProcess = async () => {
+  const directoryPath = process.env.HOGNOSE_MAP_CATALOG_DIR;
+  if (!directoryPath) {
+    console.error("HOGNOSE_MAP_CATALOG_DIR is not defined in .env.local");
+    return {
+      message: "HOGNOSE_MAP_CATALOG_DIR is not defined in .env.local",
+      processedCount: 0,
+      errors: true,
+    };
+  }
+
+  try {
+    const processingResults = await processDirectory(directoryPath);
+    const processedCount = processingResults.filter(
+      (result) => result.success
+    ).length;
+    const message = "Processing completed";
+    console.log(processingResults);
+    return { message, processedCount, errors: false };
+  } catch (error) {
+    console.error("Error processing directory:", error);
+    return {
+      message: "Error processing directory",
+      processedCount: 0,
+      errors: true,
+    };
+  }
+};
