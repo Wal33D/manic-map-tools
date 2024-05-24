@@ -1,7 +1,7 @@
 import * as dotenv from "dotenv";
 import path from "path";
 import sharp from "sharp";
-import { createCanvas } from "canvas";
+import { createCanvas, CanvasRenderingContext2D } from "canvas";
 import { parseMapDataFromFile } from "../fileParser/mapFileParser";
 import { colors } from "../utils/colorMap";
 import fs from "fs/promises";
@@ -69,21 +69,21 @@ const generatePNGFromFiles = async (
   outputType: "png" | "thumbnail" | "both"
 ): Promise<Result[]> => {
   const files = Array.isArray(filePaths) ? filePaths : [filePaths];
-  return await Promise.all(files.map(filePath => generatePNGFromFile(filePath, outputType)));
+  return Promise.all(files.map(filePath => generatePNGFromFile(filePath, outputType)));
 };
 
 const findAllDatFiles = async (dir: string): Promise<string[]> => {
   const results: string[] = [];
   const entries = await fs.readdir(dir, { withFileTypes: true });
 
-  await Promise.all(entries.map(async (entry) => {
+  for (const entry of entries) {
     const fullPath = path.join(dir, entry.name);
     if (entry.isDirectory()) {
       results.push(...await findAllDatFiles(fullPath));
     } else if (entry.isFile() && entry.name.endsWith(".dat")) {
       results.push(fullPath);
     }
-  }));
+  }
 
   return results;
 };
@@ -93,7 +93,7 @@ const processDirectory = async (
   outputType: "png" | "thumbnail" | "both"
 ): Promise<Result[]> => {
   const datFiles = await findAllDatFiles(datDirectory);
-  return await generatePNGFromFiles(datFiles, outputType);
+  return generatePNGFromFiles(datFiles, outputType);
 };
 
 const generatePNG = async (wallArray: number[][], biome = "default") => {
@@ -106,7 +106,7 @@ const generatePNG = async (wallArray: number[][], biome = "default") => {
   await drawMapTiles(ctx, wallArray, scale);
   const buffer = canvas.toBuffer("image/png");
 
-  return await adjustImage(buffer, 1280, 1080, 25, biome);
+  return adjustImage(buffer, 1280, 1080, 25, biome);
 };
 
 const generateThumbnail = async (wallArray: number[][]) => {
@@ -119,7 +119,7 @@ const generateThumbnail = async (wallArray: number[][]) => {
   await drawMapThumbTiles(ctx, wallArray, scale);
   const buffer = canvas.toBuffer("image/png");
 
-  return await sharp(buffer)
+  return sharp(buffer)
     .resize(320, 320, {
       fit: "contain",
       background: { r: 0, g: 0, b: 0, alpha: 0.1 },
@@ -132,12 +132,13 @@ const drawMapThumbTiles = async (
   wallArray: number[][],
   scale: number
 ) => {
-  wallArray.forEach((row, y) => {
-    row.forEach((tile, x) => {
+  for (let y = 0; y < wallArray.length; y++) {
+    for (let x = 0; x < wallArray[0].length; x++) {
+      const tile = wallArray[y][x];
       const color = colors[tile] || { r: 255, g: 255, b: 255, a: 1 };
       drawThumbTile(ctx, x, y, scale, color);
-    });
-  });
+    }
+  }
 };
 
 const drawThumbTile = (
@@ -156,12 +157,13 @@ const drawMapTiles = async (
   wallArray: number[][],
   scale: number
 ) => {
-  wallArray.forEach((row, y) => {
-    row.forEach((tile, x) => {
+  for (let y = 0; y < wallArray.length; y++) {
+    for (let x = 0; x < wallArray[0].length; x++) {
+      const tile = wallArray[y][x];
       const color = colors[tile] || colors.default;
       drawTile(ctx, x, y, scale, color, tile);
-    });
-  });
+    }
+  }
 };
 
 const drawTile = (
@@ -175,6 +177,10 @@ const drawTile = (
   const fallbackColor: Color = { r: 255, g: 0, b: 0, alpha: 1 };
   const { r, g, b, alpha } = { ...fallbackColor, ...color };
 
+  if (!color) {
+    console.warn(`Undefined color for tile: ${tile}`);
+  }
+
   const patternCanvas = createCanvas(scale, scale);
   const patternCtx = patternCanvas.getContext("2d");
 
@@ -183,7 +189,10 @@ const drawTile = (
   tileGradient.addColorStop(0, `rgba(${r}, ${g}, ${b}, ${alpha})`);
   tileGradient.addColorStop(
     1,
-    `rgba(${Math.max(0, r - 20)}, ${Math.max(0, g - 20)}, ${Math.max(0, b - 20)}, ${alpha})`
+    `rgba(${Math.max(0, r - 20)}, ${Math.max(0, g - 20)}, ${Math.max(
+      0,
+      b - 20
+    )}, ${alpha})`
   );
   patternCtx.fillStyle = tileGradient;
   patternCtx.fillRect(0, 0, scale, scale);
@@ -229,7 +238,7 @@ const drawTile = (
 };
 
 const create2DArray = (data: number[], width: number): number[][] =>
-  Array.from({ length: Math.ceil(data.length / width) }, (_, i) =>
+  Array.from({ length: Math.ceil(data.length / width) }, (_v, i) =>
     data.slice(i * width, i * width + width)
   );
 
@@ -241,7 +250,6 @@ const adjustImage = async (
   biome: string
 ): Promise<sharp.Sharp> => {
   let image = sharp(buffer).sharpen();
-
   image = await image.resize(
     frameWidth - 2 * padding,
     frameHeight - 2 * padding,
