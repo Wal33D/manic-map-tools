@@ -1,8 +1,10 @@
 import * as dotenv from "dotenv";
+import { test } from "./scripts/generatePNGFromFiles";
 
 dotenv.config({ path: ".env.local" });
 
 async function init() {
+  await test();
   console.log("========== Manic Miners Tools Overview ==========\n");
 
   console.log("Project Name: Manic Miners Tools");
