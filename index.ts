@@ -44,19 +44,29 @@ const processDirectory = async (
   return results;
 };
 
-const initProcess = async (outputType: "png" | "thumbnail" | "both") => {
-  const directoryPath = process.env.HOGNOSE_MAP_CATALOG_DIR;
-  if (!directoryPath) {
-    console.error("HOGNOSE_MAP_CATALOG_DIR is not defined in .env.local");
+export const generateMapImage = async (
+  outputType: "png" | "thumbnail" | "both",
+  directoryPath?: string
+) => {
+  const resolvedDirectoryPath =
+    directoryPath || process.env.HOGNOSE_MAP_CATALOG_DIR;
+  if (!resolvedDirectoryPath) {
+    console.error(
+      "HOGNOSE_MAP_CATALOG_DIR is not defined in .env.local and no directory path was provided."
+    );
     return {
-      message: "HOGNOSE_MAP_CATALOG_DIR is not defined in .env.local",
+      message:
+        "HOGNOSE_MAP_CATALOG_DIR is not defined in .env.local and no directory path was provided.",
       processedCount: 0,
       errors: true,
     };
   }
 
   try {
-    const processingResults = await processDirectory(directoryPath, outputType);
+    const processingResults = await processDirectory(
+      resolvedDirectoryPath,
+      outputType
+    );
     const processedCount = processingResults.filter(
       (result) => result.success
     ).length;
@@ -72,17 +82,3 @@ const initProcess = async (outputType: "png" | "thumbnail" | "both") => {
     };
   }
 };
-
-async function init() {
-  await initProcess("both");
-  console.log("========== Manic Miners Tools Overview ==========\n");
-  console.log("Project Name: Manic Miners Tools");
-  console.log("Version: 1.0.0");
-  console.log("Author: Waleed Judah");
-  console.log("License: MIT");
-  console.log("\n");
-}
-
-init().catch((err) =>
-  console.error("[ERROR] Error initializing project overview:", err)
-);

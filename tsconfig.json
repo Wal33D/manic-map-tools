@@ -18,6 +18,10 @@
     "src/**/*.ts",
     "scripts/*.ts",
     "src/functions/*.js",
-    "src/functions/*.ts"
+    "src/functions/*.ts",
+    "moveme/minifyProject.ts",
+    "moveme/uploadHognoseCatalog.ts",
+    "moveme/downloadCollectionFromMongoDB.ts",
+    "moveme/refac.ts"
   ]
 }
