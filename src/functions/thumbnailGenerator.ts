@@ -9,56 +9,38 @@ dotenv.config({ path: ".env.local" });
 
 export const generateThumbnailImage = async ({
   filePath,
-  thumbnailFileName = "thumbnail_render.png",
+  outputFileName = "thumbnail_render.png",
 }: {
   filePath: string;
-  thumbnailFileName?: string;
-}) => {
+  outputFileName?: string;
+}): Promise<any> => {
   let status = false;
   let message = "";
-  let thumbnailResult = null;
-  let parsedData = null;
-  let wallArray = null;
-
   const outputDir = path.dirname(filePath);
-  const thumbnailPath = path.join(outputDir, thumbnailFileName);
+  const thumbnailPath = path.join(outputDir, outputFileName);
 
   try {
     await fs.access(thumbnailPath);
     message = `Thumbnail already exists: ${thumbnailPath}`;
     status = true;
-    return {
-      status,
-      message,
-      thumbnailPath,
-      thumbnailResult,
-      wallArray,
-      parsedData,
-    };
+    return { status, message, thumbnailPath };
   } catch (accessError) {
     // Continue to generate thumbnail
   }
 
   try {
-    parsedData = await parseMapDataFromFile({ filePath });
-    wallArray = create2DArray(parsedData.tilesArray, parsedData.colcount);
+    const parsedData = await parseMapDataFromFile({ filePath });
+    const wallArray = create2DArray(parsedData.tilesArray, parsedData.colcount);
 
-    const thumbnailBuffer = await createThumbnailBuffer(wallArray);
-    thumbnailResult = await sharp(thumbnailBuffer).toFile(thumbnailPath);
+    const thumbnail = await createThumbnailBuffer(wallArray);
+    await sharp(thumbnail).toFile(thumbnailPath);
     status = true;
     message = `Thumbnail saved as ${thumbnailPath}`;
   } catch (error: any) {
     message = `Error processing file: ${filePath}, ${error.message}`;
   }
 
-  return {
-    status,
-    message,
-    thumbnailPath,
-    thumbnailResult,
-    wallArray,
-    parsedData,
-  };
+  return { status, message, thumbnailPath };
 };
 
 const createThumbnailBuffer = async (wallArray: number[][]) => {

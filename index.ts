@@ -6,6 +6,18 @@ import { generateThumbnailImage } from "./src/functions/thumbnailGenerator";
 
 dotenv.config({ path: ".env.local" });
 
+// Define types for the results
+interface ImageResult {
+  status: boolean;
+  message: string;
+  filePath?: string;
+  thumbnailPath?: string;
+  imageResult?: any;
+  wallArray?: any;
+  parsedData?: any;
+  [key: string]: any; // To accommodate any additional properties
+}
+
 const findDatFiles = async (dir: string): Promise<string[]> => {
   const results: string[] = [];
   const entries = await fs.readdir(dir, { withFileTypes: true });
@@ -25,9 +37,9 @@ const findDatFiles = async (dir: string): Promise<string[]> => {
 const processDirectory = async (
   datDirectory: string,
   outputType: "png" | "thumbnail" | "both"
-) => {
+): Promise<ImageResult[]> => {
   const datFiles = await findDatFiles(datDirectory);
-  const results = [];
+  const results: ImageResult[] = [];
 
   for (const filePath of datFiles) {
     if (outputType === "png" || outputType === "both") {
@@ -44,19 +56,25 @@ const processDirectory = async (
   return results;
 };
 
+interface GenerateMapImageResult {
+  message: string;
+  processedCount: number;
+  errors: boolean;
+  results: ImageResult[];
+}
+
 export const generateMapImage = async (
   outputType: "png" | "thumbnail" | "both",
   directoryPath?: string
-) => {
+): Promise<GenerateMapImageResult> => {
   const resolvedDirectoryPath =
     directoryPath || process.env.HOGNOSE_MAP_CATALOG_DIR;
   if (!resolvedDirectoryPath) {
-    console.error(
-      "HOGNOSE_MAP_CATALOG_DIR is not defined in .env.local and no directory path was provided."
-    );
+    const errorMessage =
+      "HOGNOSE_MAP_CATALOG_DIR is not defined in .env.local and no directory path was provided.";
+    console.error(errorMessage);
     return {
-      message:
-        "HOGNOSE_MAP_CATALOG_DIR is not defined in .env.local and no directory path was provided.",
+      message: errorMessage,
       processedCount: 0,
       errors: true,
       results: [],
@@ -79,13 +97,37 @@ export const generateMapImage = async (
       errors: false,
       results: processingResults,
     };
-  } catch (error) {
-    console.error("Error processing directory:", error);
+  } catch (error: any) {
+    const errorMessage = "Error processing directory";
+    console.error(errorMessage, error);
     return {
-      message: "Error processing directory",
+      message: errorMessage,
       processedCount: 0,
       errors: true,
       results: [],
     };
   }
 };
+
+interface InitResults {
+  pngResults: GenerateMapImageResult | null;
+  thumbnailResults: GenerateMapImageResult | null;
+  error?: string;
+}
+
+const init = async (): Promise<InitResults> => {
+  try {
+    const pngResults = await generateMapImage("png");
+    const thumbnailResults = await generateMapImage("thumbnail");
+
+    return { pngResults, thumbnailResults };
+  } catch (error: any) {
+    console.error("Initialization error:", error);
+    return { pngResults: null, thumbnailResults: null, error: error.message };
+  }
+};
+
+// Example usage of init function
+init().then((results) => {
+  console.log("Final results:", results);
+});

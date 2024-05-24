@@ -15,7 +15,7 @@ export const generatePNGImage = async ({
 }: {
   filePath: string;
   outputFileName?: string;
-}) => {
+}): Promise<any> => {
   let status = false;
   let message = "";
   let imageResult = null;
@@ -44,8 +44,12 @@ export const generatePNGImage = async ({
   try {
     parsedData = await parseMapDataFromFile({ filePath });
     wallArray = create2DArray(parsedData.tilesArray, parsedData.colcount);
-    const image = await createPNGImageBuffer(wallArray, parsedData.biome);
-    imageResult = await image.toFile(outputFilePath);
+
+    const imageBuffer: any = await createPNGImageBuffer(
+      wallArray,
+      parsedData.biome
+    );
+    imageResult = await sharp(imageBuffer).toFile(outputFilePath);
     status = true;
     message = `Image saved as ${outputFilePath}`;
   } catch (error: any) {
