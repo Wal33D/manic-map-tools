@@ -9,34 +9,86 @@ import { createCanvas, CanvasRenderingContext2D } from "canvas";
 
 dotenv.config({ path: ".env.local" });
 
+export interface GeneratePNGResult {
+  success: boolean;
+  filePath: string;
+  fileAccessed: boolean;
+  parseDataSuccess: boolean;
+  wallArrayGenerated: boolean;
+  imageBufferCreated: boolean;
+  fileSaved: boolean;
+  errorDetails?: {
+    accessError?: string;
+    parseError?: string;
+    bufferError?: string;
+    saveError?: string;
+  };
+  imageBuffer?: Buffer;
+}
+
 export const generatePNGImage = async ({
   filePath,
   outputFileName = "screenshot_render.png",
 }: {
   filePath: string;
   outputFileName?: string;
-}): Promise<any> => {
+}): Promise<GeneratePNGResult> => {
   const outputDir = path.dirname(filePath);
   const screenshotFilePath = path.join(outputDir, outputFileName);
 
+  let fileAccessed = false;
+  let parseDataSuccess = false;
+  let wallArrayGenerated = false;
+  let imageBufferCreated = false;
+  let fileSaved = false;
+  const errorDetails: GeneratePNGResult["errorDetails"] = {};
+  let imageBuffer: Buffer | undefined;
+
   try {
     await fs.access(screenshotFilePath);
-    console.log("File already exists:", screenshotFilePath);
-    return { success: true, filePath: screenshotFilePath };
-  } catch {}
+    fileAccessed = true;
+  } catch (accessError) {
+    if ((accessError as NodeJS.ErrnoException).code !== "ENOENT") {
+      errorDetails.accessError = (accessError as Error).message;
+    }
+  }
 
   try {
     const parsedData = await parseMapDataFromFile({ filePath });
+    parseDataSuccess = true;
     const wallArray = create2DArray(parsedData.tilesArray, parsedData.colcount);
-
-    const imageBuffer = await createPNGImageBuffer(wallArray, parsedData.biome);
+    wallArrayGenerated = true;
+    imageBuffer = await createPNGImageBuffer(wallArray, parsedData.biome);
+    imageBufferCreated = true;
     await sharp(imageBuffer).toFile(screenshotFilePath);
-    console.log(`Image saved as ${screenshotFilePath}`);
+    fileSaved = true;
 
-    return { success: true, filePath: screenshotFilePath, imageBuffer };
-  } catch (error) {
-    console.error("Error processing file:", filePath, error);
-    return { success: false, filePath: screenshotFilePath };
+    return {
+      success: true,
+      filePath: screenshotFilePath,
+      fileAccessed,
+      parseDataSuccess,
+      wallArrayGenerated,
+      imageBufferCreated,
+      fileSaved,
+      imageBuffer,
+    };
+  } catch (error: any) {
+    if (!parseDataSuccess) errorDetails.parseError = error.message;
+    else if (!wallArrayGenerated) errorDetails.bufferError = error.message;
+    else if (!imageBufferCreated) errorDetails.bufferError = error.message;
+    else errorDetails.saveError = error.message;
+
+    return {
+      success: false,
+      filePath: screenshotFilePath,
+      fileAccessed,
+      parseDataSuccess,
+      wallArrayGenerated,
+      imageBufferCreated,
+      fileSaved,
+      errorDetails,
+    };
   }
 };
 

@@ -7,34 +7,77 @@ import { parseMapDataFromFile } from "../fileParser/mapFileParser";
 import { createCanvas, CanvasRenderingContext2D } from "canvas";
 dotenv.config({ path: ".env.local" });
 
+export interface GenerateThumbnailResult {
+  status: boolean;
+  filePath: string;
+  fileAccessed: boolean;
+  parseDataSuccess: boolean;
+  wallArrayGenerated: boolean;
+  imageBufferCreated: boolean;
+  fileSaved: boolean;
+  errorDetails?: {
+    accessError?: string;
+    parseError?: string;
+    bufferError?: string;
+    saveError?: string;
+  };
+  imageBuffer?: Buffer;
+}
 export const generateThumbnailImage = async ({
   filePath,
   outputFileName = "thumbnail_render.png",
 }: {
   filePath: string;
   outputFileName?: string;
-}): Promise<any> => {
+}): Promise<GenerateThumbnailResult> => {
   let status = false;
   const outputDir = path.dirname(filePath);
   const thumbnailPath = path.join(outputDir, outputFileName);
 
+  let fileAccessed = false;
+  let parseDataSuccess = false;
+  let wallArrayGenerated = false;
+  let imageBufferCreated = false;
+  let fileSaved = false;
+  const errorDetails: GenerateThumbnailResult["errorDetails"] = {};
+  let imageBuffer: Buffer | undefined;
+
   try {
     await fs.access(thumbnailPath);
-    status = true;
-    return { status, thumbnailPath };
+    fileAccessed = true;
   } catch (accessError) {
-    // Continue to generate thumbnail
+    if ((accessError as NodeJS.ErrnoException).code !== "ENOENT") {
+      errorDetails.accessError = (accessError as Error).message;
+    }
   }
 
   try {
     const parsedData = await parseMapDataFromFile({ filePath });
+    parseDataSuccess = true;
     const wallArray = create2DArray(parsedData.tilesArray, parsedData.colcount);
+    wallArrayGenerated = true;
     const thumbnail = await createThumbnailBuffer(wallArray);
-    await sharp(thumbnail).toFile(thumbnailPath);
+    imageBufferCreated = true;
+    imageBuffer = await sharp(thumbnail).toFile(thumbnailPath);
+    fileSaved = true;
     status = true;
-  } catch (error: any) {}
+  } catch (error: any) {
+    if (!parseDataSuccess) errorDetails.parseError = error.message;
+    else if (!wallArrayGenerated) errorDetails.bufferError = error.message;
+    else if (!imageBufferCreated) errorDetails.bufferError = error.message;
+    else errorDetails.saveError = error.message;
+  }
 
-  return { status, thumbnailPath };
+  return {
+    status,
+    filePath: thumbnailPath,
+    fileAccessed,
+    parseDataSuccess,
+    wallArrayGenerated,
+    imageBufferCreated,
+    fileSaved,
+    errorDetails,
+  };
 };
 
 const createThumbnailBuffer = async (wallArray: number[][]) => {

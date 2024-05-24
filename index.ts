@@ -1,8 +1,14 @@
 import fs from "fs/promises";
 import path from "path";
 import * as dotenv from "dotenv";
-import { generatePNGImage } from "./src/functions/pngGenerator";
-import { generateThumbnailImage } from "./src/functions/thumbnailGenerator";
+import {
+  generatePNGImage,
+  GeneratePNGResult,
+} from "./src/functions/pngGenerator";
+import {
+  generateThumbnailImage,
+  GenerateThumbnailResult,
+} from "./src/functions/thumbnailGenerator";
 
 dotenv.config({ path: ".env.local" });
 
@@ -25,9 +31,9 @@ const findDatFiles = async (dir: string): Promise<string[]> => {
 const processDirectory = async (
   datDirectory: string,
   outputType: "png" | "thumbnail" | "both"
-) => {
+): Promise<Array<GeneratePNGResult | GenerateThumbnailResult>> => {
   const datFiles = await findDatFiles(datDirectory);
-  const results = [];
+  const results: Array<GeneratePNGResult | GenerateThumbnailResult> = [];
 
   for (const filePath of datFiles) {
     if (outputType === "png" || outputType === "both") {
@@ -68,11 +74,13 @@ export const generateMapImage = async (
       outputType
     );
     const processedCount = processingResults.filter(
-      (result) => result.status
+      (result) => result.success
     ).length;
-    const message = "Processing completed";
-    console.log(processingResults);
-    return { message, processedCount, errors: false };
+    return {
+      processedCount,
+      errors: processingResults.length !== processedCount,
+      results: processingResults,
+    };
   } catch (error) {
     console.error("Error processing directory:", error);
     return {
