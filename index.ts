@@ -3,7 +3,11 @@ import path from "path";
 import * as dotenv from "dotenv";
 import { generatePNGImage } from "./src/functions/generatePNGImage";
 import { generateThumbnailImage } from "./src/functions/generateThumbnailImage";
-import { GenerateImageResult, GenerateMapImageResult } from "./src/types";
+import {
+  GenerateImageResult,
+  GenerateMapImageParams,
+  GenerateMapImageResult,
+} from "./src/types";
 export { GenerateImageResult, GenerateMapImageResult } from "./src/types";
 
 dotenv.config({ path: ".env.local" });
@@ -62,10 +66,10 @@ const processDirectory = async (
   return { results, thumbnailsProcessed, pngsProcessed, updateNeeded };
 };
 
-export const generateMapImage = async (
-  outputType: "png" | "thumbnail" | "both",
-  directoryPath?: string
-): Promise<GenerateMapImageResult> => {
+export const generateMapImage = async ({
+  outputType,
+  directoryPath,
+}: GenerateMapImageParams): Promise<GenerateMapImageResult> => {
   const resolvedDirectoryPath =
     directoryPath || process.env.HOGNOSE_MAP_CATALOG_DIR;
   if (!resolvedDirectoryPath) {
@@ -103,8 +107,8 @@ export const generateMapImage = async (
   } catch (error) {
     console.error("Error processing directory:", error);
     return {
-      processedCount: 0,
       updateNeeded: false,
+      processedCount: 0,
       thumbnailsProcessed: false,
       pngsProcessed: false,
       errors: true,

@@ -31,3 +31,8 @@ export interface GenerateMapImageResult {
   updateNeeded: boolean;
   errorDetails?: GenerateImageResult[];
 }
+
+export type GenerateMapImageParams = {
+  outputType: "png" | "thumbnail" | "both";
+  directoryPath?: string;
+};
