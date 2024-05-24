@@ -3,7 +3,7 @@ import * as fs from "fs/promises";
 import * as path from "path";
 import * as chardet from "chardet";
 import { Stats } from "fs";
-import { colors } from "../src/functions/colorMap";
+import { colors } from "./colorMap";
 
 dotenv.config({ path: ".env.local" });
 
@@ -164,7 +164,7 @@ async function mapTileIntegrityCheck(baseDir: string): Promise<any> {
 }
 
 async function init() {
-  const directoryPath = process.env.MMT_CATALOG_DIR;
+  const directoryPath: any = process.env.MMT_CATALOG_DIR;
   const processingResults = await mapTileIntegrityCheck(directoryPath);
   console.log(processingResults);
 }

@@ -1,4 +1,4 @@
-import { Color } from "../types/types";
+import { Color } from "../types";
 
 export const colors: { [key: number | string]: Color | any } = {
   1: { r: 124, g: 92, b: 70 }, // Ground

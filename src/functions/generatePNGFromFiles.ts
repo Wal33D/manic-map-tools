@@ -3,8 +3,8 @@ import path from "path";
 import sharp from "sharp";
 import { createCanvas, CanvasRenderingContext2D } from "canvas";
 import { parseMapDataFromFile } from "../fileParser/mapFileParser";
-import { Color } from "../src/types/types";
-import { colors } from "../src/functions/colorMap";
+import { Color } from "../types";
+import { colors } from "../utils/colorMap";
 
 dotenv.config({ path: ".env.local" });
 

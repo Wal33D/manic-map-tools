@@ -139,7 +139,7 @@ const processDatFiles = (filePaths: string[]): void => {
 
 async function init() {
   try {
-    const directoryPath = process.env.MMT_CLEAN_ME_DIR;
+    const directoryPath: any = process.env.MMT_CLEAN_ME_DIR;
 
     const datFiles = await getDatFiles(directoryPath);
 

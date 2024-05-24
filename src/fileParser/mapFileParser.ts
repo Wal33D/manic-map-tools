@@ -2,7 +2,8 @@ import fs from "fs";
 import iconv from "iconv-lite";
 import chardet from "chardet";
 import { ParsedMapData } from "./types";
-import { countResources, getSizeCategory } from "./utils";
+import { countResources } from "../utils/countResources";
+import { getSizeCategory } from "../utils/getSizeCategory";
 
 /**
  * Parses map data from a file to extract detailed game map information.
