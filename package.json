@@ -1,7 +1,7 @@
 {
   "name": "manic-map-tools",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "dist/index.js",
   "scripts": {
     "resetdist": "rimraf dist",
     "build": "tsc",
@@ -15,7 +15,7 @@
     "upload": "npm run prep && node dist/functions/uploadHognoseCatalog.js",
     "refac": "npm run prep && node dist/src/functions/refac.js",
     "download": "npm run prep && node dist/functions/downloadCollectionFromMongoDB.js",
-    "start": "ts-node index.ts"
+    "start": "ts-node index.js"
   },
   "author": "Waleed Judah",
   "license": "MIT",

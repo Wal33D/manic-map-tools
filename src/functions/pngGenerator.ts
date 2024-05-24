@@ -184,6 +184,7 @@ const processImageBuffer = async (
   });
 
   const metadata = await image.metadata();
+  //@ts-ignore
   if (metadata.width > metadata.height) {
     image = image.rotate(90);
   }
