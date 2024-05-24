@@ -4,45 +4,10 @@ import sharp from "sharp";
 import * as dotenv from "dotenv";
 import { colors } from "../utils/colorMap";
 import { parseMapDataFromFile } from "../fileParser/mapFileParser";
+import { Color, GenerateImageResult } from "../types";
 import { createCanvas, CanvasRenderingContext2D } from "canvas";
 
 dotenv.config({ path: ".env.local" });
-
-export interface GenerateThumbnailResult {
-  status: boolean;
-  filePath: string;
-  fileAccessed: boolean;
-  parseDataSuccess: boolean;
-  wallArrayGenerated: boolean;
-  imageBufferCreated: boolean;
-  fileSaved: boolean;
-  imageCreated: boolean;
-  errorDetails?: {
-    accessError?: string;
-    parseError?: string;
-    bufferError?: string;
-    saveError?: string;
-  };
-  imageBuffer?: Buffer;
-}
-
-export interface GenerateThumbnailResult {
-  status: boolean;
-  filePath: string;
-  fileAccessed: boolean;
-  parseDataSuccess: boolean;
-  wallArrayGenerated: boolean;
-  imageBufferCreated: boolean;
-  fileSaved: boolean;
-  imageCreated: boolean;
-  errorDetails?: {
-    accessError?: string;
-    parseError?: string;
-    bufferError?: string;
-    saveError?: string;
-  };
-  imageBuffer?: Buffer;
-}
 
 export const generateThumbnailImage = async ({
   filePath,
@@ -50,7 +15,7 @@ export const generateThumbnailImage = async ({
 }: {
   filePath: string;
   outputFileName?: string;
-}): Promise<GenerateThumbnailResult> => {
+}): Promise<GenerateImageResult> => {
   let status = false;
   const outputDir = path.dirname(filePath);
   const thumbnailPath = path.join(outputDir, outputFileName);
@@ -61,7 +26,7 @@ export const generateThumbnailImage = async ({
   let imageBufferCreated = false;
   let fileSaved = false;
   let imageCreated = false;
-  const errorDetails: GenerateThumbnailResult["errorDetails"] = {};
+  const errorDetails: GenerateImageResult["errorDetails"] = {};
   let imageBuffer: Buffer | undefined;
 
   try {

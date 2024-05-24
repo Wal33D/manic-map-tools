@@ -2,30 +2,12 @@ import fs from "fs/promises";
 import path from "path";
 import sharp from "sharp";
 import * as dotenv from "dotenv";
-import { Color } from "../types";
 import { colors } from "../utils/colorMap";
 import { parseMapDataFromFile } from "../fileParser/mapFileParser";
+import { Color, GenerateImageResult } from "../types";
 import { createCanvas, CanvasRenderingContext2D } from "canvas";
 
 dotenv.config({ path: ".env.local" });
-
-export interface GeneratePNGResult {
-  status: boolean;
-  filePath: string;
-  fileAccessed: boolean;
-  parseDataSuccess: boolean;
-  wallArrayGenerated: boolean;
-  imageBufferCreated: boolean;
-  fileSaved: boolean;
-  imageCreated: boolean;
-  errorDetails?: {
-    accessError?: string;
-    parseError?: string;
-    bufferError?: string;
-    saveError?: string;
-  };
-  imageBuffer?: Buffer;
-}
 
 export const generatePNGImage = async ({
   filePath,
@@ -33,7 +15,7 @@ export const generatePNGImage = async ({
 }: {
   filePath: string;
   outputFileName?: string;
-}): Promise<GeneratePNGResult> => {
+}): Promise<GenerateImageResult> => {
   const outputDir = path.dirname(filePath);
   const screenshotFilePath = path.join(outputDir, outputFileName);
 
@@ -43,7 +25,7 @@ export const generatePNGImage = async ({
   let imageBufferCreated = false;
   let fileSaved = false;
   let imageCreated = false;
-  const errorDetails: GeneratePNGResult["errorDetails"] = {};
+  const errorDetails: GenerateImageResult["errorDetails"] = {};
   let imageBuffer: Buffer | undefined;
 
   try {
