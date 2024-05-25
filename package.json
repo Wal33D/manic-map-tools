@@ -1,42 +1,42 @@
 {
-  "name": "manic-map-tools",
-  "version": "1.0.0",
-  "main": "dist/index.js",
-  "scripts": {
-    "resetdist": "rimraf dist",
-    "build": "tsc",
-    "copy-assets": "copyfiles -u 1 ./assets/**/* ./dist",
-    "prep": "npm run resetdist && npm run build && npm run copy-assets",
-    "check": "npm run prep && node dist/utils/mapIntegrityCheck.js",
-    "avg": "npm run prep && node dist/utils/averageMapSize.js",
-    "stats": "npm run prep && node dist/utils/logMapDataStats.js",
-    "clean": "npm run prep && node dist/utils/cleanMapFile.js",
-    "minify": "npm run prep && node dist/utils/minifyProject.js",
-    "upload": "npm run prep && node dist/functions/uploadHognoseCatalog.js",
-    "refac": "npm run prep && node dist/src/functions/refac.js",
-    "download": "npm run prep && node dist/functions/downloadCollectionFromMongoDB.js",
-    "start": "ts-node index.js"
-  },
-  "author": "Waleed Judah",
-  "license": "MIT",
-  "description": "",
-  "dependencies": {
-    "axios": "^1.6.8",
-    "canvas": "^2.11.2",
-    "chardet": "^2.0.0",
-    "dotenv": "^16.4.5",
-    "mongodb": "^6.6.2",
-    "node-fetch": "^3.3.2",
-    "node-html-parser": "^6.1.13",
-    "unzipper": "^0.11.6",
-    "xml2js": "^0.6.2"
-  },
-  "devDependencies": {
-    "@types/chardet": "^0.8.3",
-    "@types/dotenv": "^8.2.0",
-    "@types/node": "^20.12.12",
-    "@types/unzipper": "^0.10.9",
-    "@types/xml2js": "^0.4.14",
-    "copyfiles": "^2.4.1"
-  }
+    "name": "manic-map-tools",
+    "version": "1.0.0",
+    "main": "dist/index.js",
+    "scripts": {
+        "resetdist": "rimraf dist",
+        "build": "tsc",
+        "copy-assets": "copyfiles -u 1 ./assets/**/* ./dist",
+        "prep": "npm run resetdist && npm run build && npm run copy-assets",
+        "check": "npm run prep && node dist/utils/mapIntegrityCheck.js",
+        "avg": "npm run prep && node dist/utils/averageMapSize.js",
+        "stats": "npm run prep && node dist/utils/logMapDataStats.js",
+        "clean": "npm run prep && node dist/utils/cleanMapFile.js",
+        "minify": "npm run prep && node dist/utils/minifyProject.js",
+        "upload": "npm run prep && node dist/functions/uploadHognoseCatalog.js",
+        "refac": "npm run prep && node dist/src/functions/refac.js",
+        "download": "npm run prep && node dist/functions/downloadCollectionFromMongoDB.js",
+        "start": "ts-node dist/index.js"
+    },
+    "author": "Waleed Judah",
+    "license": "MIT",
+    "description": "",
+    "dependencies": {
+        "axios": "^1.6.8",
+        "canvas": "^2.11.2",
+        "chardet": "^2.0.0",
+        "dotenv": "^16.4.5",
+        "mongodb": "^6.6.2",
+        "node-fetch": "^3.3.2",
+        "node-html-parser": "^6.1.13",
+        "unzipper": "^0.11.6",
+        "xml2js": "^0.6.2"
+    },
+    "devDependencies": {
+        "@types/chardet": "^0.8.3",
+        "@types/dotenv": "^8.2.0",
+        "@types/node": "^20.12.12",
+        "@types/unzipper": "^0.10.9",
+        "@types/xml2js": "^0.4.14",
+        "copyfiles": "^2.4.1"
+    }
 }

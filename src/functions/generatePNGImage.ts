@@ -76,8 +76,14 @@ export const generatePNGImage = async ({ filePath, outputFileName = 'screenshot_
 
 const createPNGImageBuffer = async (wallArray: number[][], biome = 'default') => {
     const scale = 20;
-    const width = wallArray.length;
-    const height = wallArray[0].length;
+    let height = wallArray.length;
+    let width = wallArray[0].length;
+
+    // Switch height and width if height is greater than width
+    if (height > width) {
+        [height, width] = [width, height];
+    }
+
     const borderTiles = 2;
     const canvasWidth = (width + borderTiles * 2) * scale;
     const canvasHeight = (height + borderTiles * 2) * scale;
@@ -93,15 +99,26 @@ const createPNGImageBuffer = async (wallArray: number[][], biome = 'default') =>
 
     const buffer = canvas.toBuffer('image/png');
 
-    // Scale the image to 1280x1280
-    const scaledBuffer = await sharp(buffer)
-        .resize(1280, 1280, {
-            fit: 'contain',
-            background: getBiomeColorObject(biome),
-        })
-        .toBuffer();
+    // Rotate the image to portrait mode if width is greater than height
+    let finalBuffer = buffer;
+    if (canvasWidth > canvasHeight) {
+        finalBuffer = await sharp(buffer)
+            .rotate(90)
+            .resize(1280, 1280, {
+                fit: 'contain',
+                background: getBiomeColorObject(biome),
+            })
+            .toBuffer();
+    } else {
+        finalBuffer = await sharp(buffer)
+            .resize(1280, 1280, {
+                fit: 'contain',
+                background: getBiomeColorObject(biome),
+            })
+            .toBuffer();
+    }
 
-    return scaledBuffer;
+    return finalBuffer;
 };
 
 const getBiomeColor = (biome: string): string => {

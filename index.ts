@@ -46,6 +46,7 @@ const processDirectory = async (
             results.push(pngResult);
             if (pngResult.imageCreated) {
                 updateNeeded = true;
+                processedCount += 1;
             }
         }
 
@@ -57,10 +58,10 @@ const processDirectory = async (
             results.push(thumbnailResult);
             if (thumbnailResult.imageCreated) {
                 updateNeeded = true;
+                processedCount += 1;
             }
         }
 
-        processedCount += 1;
         if (progressCallback) {
             progressCallback({ processedCount, totalCount });
         }
