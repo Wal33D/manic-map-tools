@@ -39,18 +39,12 @@ import { getSizeCategory } from '../utils/getSizeCategory';
  * - briefingsuccess: success briefing text
  * - briefingfailure: failure briefing text
  * - vehicles: list of vehicles in the map
- * - landslideFrequency: frequency of landslides
- * - script: script associated with the map
- * - buildings: list of buildings in the map
- * - objectives: list of objectives in the map
- * - comments: comments related to the map
  */
 
 export function parseMapDataFromFile({ filePath }: { filePath: string }): Promise<ParsedMapData> {
     return new Promise((resolve, reject) => {
-        console.log('Detecting file encoding...');
+        // Detect the file encoding
         const encoding = chardet.detectFileSync(filePath) || 'utf8';
-        console.log(`Detected encoding: ${encoding}`);
 
         fs.readFile(filePath, (err, data) => {
             if (err) {
@@ -59,7 +53,7 @@ export function parseMapDataFromFile({ filePath }: { filePath: string }): Promis
                 return;
             }
 
-            console.log('Decoding file data...');
+            // Decode the buffer using the detected encoding
             const levelFileData = iconv.decode(data, encoding);
 
             const parsedData: ParsedMapData = {
@@ -90,39 +84,29 @@ export function parseMapDataFromFile({ filePath }: { filePath: string }): Promis
                 briefingsuccess: '',
                 briefingfailure: '',
                 vehicles: '',
-                landslideFrequency: '',
-                script: '',
-                buildings: '',
-                objectives: '',
-                comments: '',
             };
 
             const lines = levelFileData
                 .split('\n')
                 .map(line => line.trim())
                 .filter(line => line.length > 0);
-
             let currentKey = '';
             let resourceKey = '';
 
-            console.log('Processing lines...');
             lines.forEach(line => {
                 if (line.endsWith('{')) {
                     currentKey = line.replace('{', '').trim();
-                    console.log(`Entering section: ${currentKey}`);
                 } else if (line.startsWith('}')) {
-                    console.log(`Exiting section: ${currentKey}`);
                     currentKey = '';
                     resourceKey = '';
                 } else if (currentKey === 'info') {
-                    const [key, value] = line.split(':').map(part => part.trim().toLowerCase());
-                    if (key in parsedData) {
-                        if (['rowcount', 'colcount'].includes(key)) {
-                            parsedData[key] = parseInt(value, 10);
-                        } else {
-                            parsedData[key] = value;
-                        }
-                        console.log(`Parsed info - ${key}: ${value}`);
+                    const keyValue = line.split(':');
+                    const key = keyValue[0].trim().toLowerCase();
+                    const value = keyValue[1].trim();
+                    if (key === 'rowcount' || key === 'colcount') {
+                        parsedData[key] = parseInt(value, 10);
+                    } else if (key === 'biome' || key === 'creator' || key === 'levelname') {
+                        parsedData[key] = value;
                     }
                 } else if (currentKey === 'resources') {
                     if (line.includes(':')) {
@@ -130,32 +114,28 @@ export function parseMapDataFromFile({ filePath }: { filePath: string }): Promis
                     } else if (resourceKey) {
                         const numbers = line
                             .split(',')
-                            .map(n => parseInt(n.trim(), 10))
+                            .filter(n => n.trim() !== '')
+                            .map(n => parseInt(n, 10))
                             .filter(n => !isNaN(n));
                         if (resourceKey === 'crystals') {
                             parsedData.crystalArray = parsedData.crystalArray.concat(numbers);
                         } else if (resourceKey === 'ore') {
                             parsedData.oreArray = parsedData.oreArray.concat(numbers);
                         }
-                        console.log(`Parsed resources - ${resourceKey}: ${numbers}`);
                     }
-                } else if (['tiles', 'height'].includes(currentKey)) {
+                } else if (currentKey === 'tiles' || currentKey === 'height') {
                     const numbers = line
                         .split(',')
-                        .map(n => parseInt(n.trim(), 10))
+                        .filter(n => n.trim() !== '')
+                        .map(n => parseInt(n, 10))
                         .filter(n => !isNaN(n));
                     if (currentKey === 'tiles') {
                         parsedData.tilesArray = parsedData.tilesArray.concat(numbers);
                     } else if (currentKey === 'height') {
                         parsedData.heightArray = parsedData.heightArray.concat(numbers);
                     }
-                    console.log(`Parsed ${currentKey}: ${numbers}`);
-                } else {
-                    if (parsedData[currentKey] === undefined) {
-                        parsedData[currentKey] = '';
-                    }
+                } else if (currentKey === 'creatures' || currentKey === 'miners' || currentKey === 'briefing' || currentKey === 'briefingsuccess' || currentKey === 'briefingfailure' || currentKey === 'vehicles') {
                     parsedData[currentKey] += line + '\n';
-                    console.log(`Parsed ${currentKey}: ${line}`);
                 }
             });
 
@@ -167,7 +147,6 @@ export function parseMapDataFromFile({ filePath }: { filePath: string }): Promis
                 parsedData.minElevation = Math.min(...parsedData.heightArray);
                 parsedData.averageElevation = parsedData.heightArray.reduce((acc, val) => acc + val, 0) / parsedData.heightArray.length;
                 parsedData.elevationRange = parsedData.maxElevation - parsedData.minElevation;
-                console.log('Elevation data calculated.');
             }
 
             parsedData.size = parsedData.rowcount * parsedData.colcount;
@@ -176,8 +155,6 @@ export function parseMapDataFromFile({ filePath }: { filePath: string }): Promis
             parsedData.shortestDimension = Math.min(parsedData.rowcount, parsedData.colcount);
             parsedData.axisCount = parsedData.rowcount < parsedData.colcount ? parsedData.rowcount : parsedData.colcount;
             parsedData.isSquare = parsedData.rowcount === parsedData.colcount;
-
-            console.log('Parsed data:', parsedData);
             resolve(parsedData);
         });
     });

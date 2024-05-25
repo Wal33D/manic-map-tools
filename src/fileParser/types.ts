@@ -26,10 +26,4 @@ export interface ParsedMapData {
     heightArray: number[];
     oreArray: number[];
     crystalArray: number[];
-    landslideFrequency: string;
-    script: string;
-    buildings: string;
-    objectives: string;
-    comments: string;
-    [key: string]: any;
 }
