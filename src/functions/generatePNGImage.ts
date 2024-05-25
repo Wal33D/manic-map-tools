@@ -75,35 +75,56 @@ export const generatePNGImage = async ({ filePath, outputFileName = 'screenshot_
 };
 
 const createPNGImageBuffer = async (wallArray: number[][], biome = 'default') => {
-    const scale = 10;
+    const scale = 17;
     const width = wallArray.length;
     const height = wallArray[0].length;
-    const canvas = createCanvas(width * scale, height * scale);
+    const borderTiles = 2;
+    const canvasWidth = (width + borderTiles * 2) * scale;
+    const canvasHeight = (height + borderTiles * 2) * scale;
+    const canvas = createCanvas(canvasWidth, canvasHeight);
     const ctx = canvas.getContext('2d');
 
-    await renderMapTiles(ctx, wallArray, scale);
+    // Draw the border
+    ctx.fillStyle = getBiomeColor(biome);
+    ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+
+    // Render the map tiles with the border
+    await renderMapTiles(ctx, wallArray, scale, borderTiles);
+
     const buffer = canvas.toBuffer('image/png');
-    const frameWidth = 1080;
-    const frameHeight = 720;
-    const padding = 20;
 
-    const image = await processImageBuffer(buffer, frameWidth, frameHeight, padding, biome);
-    const finalCanvas = await image.toBuffer();
-
-    return await sharp(finalCanvas)
-        .resize(1080, 1080, {
+    // Scale the image to 1280x1280
+    const scaledBuffer = await sharp(buffer)
+        .resize(1280, 1280, {
             fit: 'contain',
-            background: { r: 0, g: 0, b: 0, alpha: 0.1 },
+            background: getBiomeColorObject(biome),
         })
         .toBuffer();
+
+    return scaledBuffer;
 };
 
-const renderMapTiles = async (ctx: CanvasRenderingContext2D, wallArray: number[][], scale: number) => {
+const getBiomeColor = (biome: string): string => {
+    const color = colors[biome.toLowerCase()] || colors.default;
+    return `rgba(${color.r}, ${color.g}, ${color.b}, ${color.alpha || 1})`;
+};
+
+const getBiomeColorObject = (biome: string) => {
+    const color = colors[biome.toLowerCase()] || colors.default;
+    return {
+        r: color.r,
+        g: color.g,
+        b: color.b,
+        alpha: color.alpha || 1,
+    };
+};
+
+const renderMapTiles = async (ctx: CanvasRenderingContext2D, wallArray: number[][], scale: number, borderTiles: number) => {
     for (let y = 0; y < wallArray.length; y++) {
         for (let x = 0; x < wallArray[0].length; x++) {
             const tile = wallArray[y][x];
             const color = colors[tile] || colors.default;
-            drawMapTile(ctx, x, y, scale, color, tile);
+            drawMapTile(ctx, x + borderTiles, y + borderTiles, scale, color, tile);
         }
     }
 };
@@ -166,29 +187,4 @@ const create2DArray = (data: number[], width: number): number[][] => {
         result.push(data.slice(i, i + width));
     }
     return result;
-};
-
-const processImageBuffer = async (buffer: sharp.SharpOptions | Buffer | any, frameWidth: number, frameHeight: number, padding: number, biome: string) => {
-    let image = sharp(buffer).sharpen();
-
-    image = await image.resize(frameWidth - 2 * padding, frameHeight - 2 * padding, {
-        fit: 'inside',
-        withoutEnlargement: true,
-    });
-
-    image = await image.extend({
-        top: padding,
-        bottom: padding,
-        left: padding,
-        right: padding,
-        background: colors[biome.toLowerCase()] || colors.default,
-    });
-
-    const metadata = await image.metadata();
-    //@ts-ignore
-    if (metadata.width > metadata.height) {
-        image = image.rotate(90);
-    }
-
-    return image;
 };

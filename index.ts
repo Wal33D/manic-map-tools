@@ -24,7 +24,13 @@ const findDatFiles = async (dir: string): Promise<string[]> => {
     return results;
 };
 
-const processDirectory = async (datDirectory: string, type: 'png' | 'thumbnail' | 'both', screenshotFileName?: string, thumbnailFileName?: string): Promise<ProcessDirectoryResult> => {
+const processDirectory = async (
+    datDirectory: string,
+    type: 'png' | 'thumbnail' | 'both',
+    progressCallback?: (progress: { processedCount: number; totalCount: number }) => void,
+    screenshotFileName?: string,
+    thumbnailFileName?: string
+): Promise<ProcessDirectoryResult> => {
     const datFiles = await findDatFiles(datDirectory);
     const totalCount = datFiles.length;
     const results: GenerateImageResult[] = [];
@@ -40,7 +46,6 @@ const processDirectory = async (datDirectory: string, type: 'png' | 'thumbnail' 
             results.push(pngResult);
             if (pngResult.imageCreated) {
                 updateNeeded = true;
-                processedCount += 1;
             }
         }
 
@@ -52,15 +57,25 @@ const processDirectory = async (datDirectory: string, type: 'png' | 'thumbnail' 
             results.push(thumbnailResult);
             if (thumbnailResult.imageCreated) {
                 updateNeeded = true;
-                processedCount += 1;
             }
+        }
+
+        processedCount += 1;
+        if (progressCallback) {
+            progressCallback({ processedCount, totalCount });
         }
     }
 
     return { results, processedCount, totalCount, updateNeeded };
 };
 
-export const generateMapImage = async ({ type, directoryPath, screenshotFileName, thumbnailFileName }: GenerateMapImageParams): Promise<GenerateMapImageResult> => {
+export const generateMapImage = async ({
+    type,
+    directoryPath,
+    screenshotFileName,
+    thumbnailFileName,
+    progressCallback,
+}: GenerateMapImageParams & { progressCallback?: (progress: { processedCount: number; totalCount: number }) => void }): Promise<GenerateMapImageResult> => {
     const resolvedDirectoryPath = directoryPath || process.env.MMT_CATALOG_DIR;
     if (!resolvedDirectoryPath) {
         const message = 'MMT_CATALOG_DIR is not defined in .env.local and no directory path was provided.';
@@ -75,7 +90,7 @@ export const generateMapImage = async ({ type, directoryPath, screenshotFileName
     }
 
     try {
-        const { updateNeeded, results: processingResults, processedCount, totalCount } = await processDirectory(resolvedDirectoryPath, type, screenshotFileName, thumbnailFileName);
+        const { updateNeeded, results: processingResults, processedCount, totalCount } = await processDirectory(resolvedDirectoryPath, type, progressCallback, screenshotFileName, thumbnailFileName);
         const errors = processingResults.filter(result => !result.status);
         const errorCount = errors.length;
 
