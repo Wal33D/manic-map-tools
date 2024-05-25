@@ -75,7 +75,7 @@ export const generatePNGImage = async ({ filePath, outputFileName = 'screenshot_
 };
 
 const createPNGImageBuffer = async (wallArray: number[][], biome = 'default') => {
-    const scale = 17;
+    const scale = 20;
     const width = wallArray.length;
     const height = wallArray[0].length;
     const borderTiles = 2;
@@ -120,22 +120,27 @@ const getBiomeColorObject = (biome: string) => {
 };
 
 const renderMapTiles = async (ctx: CanvasRenderingContext2D, wallArray: number[][], scale: number, borderTiles: number) => {
+    const patterns: { [key: string]: CanvasPattern } = {};
+
     for (let y = 0; y < wallArray.length; y++) {
         for (let x = 0; x < wallArray[0].length; x++) {
             const tile = wallArray[y][x];
             const color = colors[tile] || colors.default;
-            drawMapTile(ctx, x + borderTiles, y + borderTiles, scale, color, tile);
+
+            // Create and cache the pattern if it doesn't exist
+            if (!patterns[tile]) {
+                patterns[tile] = createTilePattern(scale, color, tile);
+            }
+
+            ctx.fillStyle = patterns[tile];
+            ctx.fillRect((x + borderTiles) * scale, (y + borderTiles) * scale, scale, scale);
         }
     }
 };
 
-const drawMapTile = (ctx: CanvasRenderingContext2D, x: number, y: number, scale: number, color: Color, tile: number) => {
+const createTilePattern = (scale: number, color: Color, tile: number): CanvasPattern => {
     const fallbackColor: Color = { r: 255, g: 0, b: 0, alpha: 1 };
     const { r = fallbackColor.r, g = fallbackColor.g, b = fallbackColor.b, alpha = fallbackColor.alpha } = color || {};
-
-    if (color === undefined) {
-        console.warn(`Undefined color for tile: ${tile}`);
-    }
 
     const patternCanvas = createCanvas(scale, scale);
     const patternCtx = patternCanvas.getContext('2d');
@@ -159,26 +164,7 @@ const drawMapTile = (ctx: CanvasRenderingContext2D, x: number, y: number, scale:
         patternCtx.stroke();
     }
 
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
-    ctx.shadowBlur = 5;
-    ctx.shadowOffsetX = 3;
-    ctx.shadowOffsetY = 3;
-
-    const pattern = ctx.createPattern(patternCanvas, 'repeat');
-    ctx.fillStyle = pattern;
-    ctx.fillRect(x * scale, y * scale, scale, scale);
-
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
-    ctx.beginPath();
-    ctx.moveTo(x * scale, y * scale + scale);
-    ctx.lineTo(x * scale, y * scale);
-    ctx.lineTo(x * scale + scale, y * scale);
-    ctx.stroke();
-
-    ctx.shadowColor = 'transparent';
-    ctx.shadowBlur = 0;
-    ctx.shadowOffsetX = 0;
-    ctx.shadowOffsetY = 0;
+    return patternCtx.createPattern(patternCanvas, 'repeat')!;
 };
 
 const create2DArray = (data: number[], width: number): number[][] => {
