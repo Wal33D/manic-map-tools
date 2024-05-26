@@ -8,8 +8,8 @@ async function calculateMapSizeStats(baseDir: string): Promise<any> {
     let totalSize = 0;
     let fileCount = 0;
     let failedCount = 0;
-    let minSize = Infinity;
-    let maxSize = -Infinity;
+    let smallestSize = Infinity;
+    let largestSize = -Infinity;
     let failedFiles: string[] = [];
     let emptyDatDirectories: string[] = [];
     let directoriesChecked = 0;
@@ -17,17 +17,17 @@ async function calculateMapSizeStats(baseDir: string): Promise<any> {
 
     let totalCrystals = 0;
     let totalOre = 0;
-    let minCrystals = Infinity;
-    let maxCrystals = -Infinity;
-    let minOre = Infinity;
-    let maxOre = -Infinity;
+    let smallestCrystals = Infinity;
+    let largestCrystals = -Infinity;
+    let smallestOre = Infinity;
+    let largestOre = -Infinity;
 
     let totalCrystalDensity = 0;
     let totalOreDensity = 0;
-    let minCrystalDensity = Infinity;
-    let maxCrystalDensity = -Infinity;
-    let minOreDensity = Infinity;
-    let maxOreDensity = -Infinity;
+    let smallestCrystalDensity = Infinity;
+    let largestCrystalDensity = -Infinity;
+    let smallestOreDensity = Infinity;
+    let largestOreDensity = -Infinity;
 
     let totalOreToCrystalRatio = 0;
 
@@ -63,22 +63,22 @@ async function calculateMapSizeStats(baseDir: string): Promise<any> {
                         if (size !== null) {
                             totalSize += size;
                             fileCount++;
-                            if (size < minSize) minSize = size;
-                            if (size > maxSize) maxSize = size;
+                            if (size < smallestSize) smallestSize = size;
+                            if (size > largestSize) largestSize = size;
 
                             totalCrystals += resourceStats.crystals.count;
                             totalOre += resourceStats.ore.count;
-                            if (resourceStats.crystals.count < minCrystals) minCrystals = resourceStats.crystals.count;
-                            if (resourceStats.crystals.count > maxCrystals) maxCrystals = resourceStats.crystals.count;
-                            if (resourceStats.ore.count < minOre) minOre = resourceStats.ore.count;
-                            if (resourceStats.ore.count > maxOre) maxOre = resourceStats.ore.count;
+                            if (resourceStats.crystals.count < smallestCrystals) smallestCrystals = resourceStats.crystals.count;
+                            if (resourceStats.crystals.count > largestCrystals) largestCrystals = resourceStats.crystals.count;
+                            if (resourceStats.ore.count < smallestOre) smallestOre = resourceStats.ore.count;
+                            if (resourceStats.ore.count > largestOre) largestOre = resourceStats.ore.count;
 
                             totalCrystalDensity += resourceStats.crystals.density;
                             totalOreDensity += resourceStats.ore.density;
-                            if (resourceStats.crystals.density < minCrystalDensity) minCrystalDensity = resourceStats.crystals.density;
-                            if (resourceStats.crystals.density > maxCrystalDensity) maxCrystalDensity = resourceStats.crystals.density;
-                            if (resourceStats.ore.density < minOreDensity) minOreDensity = resourceStats.ore.density;
-                            if (resourceStats.ore.density > maxOreDensity) maxOreDensity = resourceStats.ore.density;
+                            if (resourceStats.crystals.density < smallestCrystalDensity) smallestCrystalDensity = resourceStats.crystals.density;
+                            if (resourceStats.crystals.density > largestCrystalDensity) largestCrystalDensity = resourceStats.crystals.density;
+                            if (resourceStats.ore.density < smallestOreDensity) smallestOreDensity = resourceStats.ore.density;
+                            if (resourceStats.ore.density > largestOreDensity) largestOreDensity = resourceStats.ore.density;
 
                             if (resourceStats.crystals.count > 0) {
                                 const oreToCrystalRatio = resourceStats.ore.count / resourceStats.crystals.count;
@@ -184,40 +184,40 @@ async function calculateMapSizeStats(baseDir: string): Promise<any> {
         emptyDatDirectories.push(baseDir);
     }
 
-    const averageSize = fileCount > 0 ? (totalSize / fileCount).toFixed(2) : 0;
-    const averageCrystals = fileCount > 0 ? (totalCrystals / fileCount).toFixed(2) : 0;
-    const averageOre = fileCount > 0 ? (totalOre / fileCount).toFixed(2) : 0;
-    const averageCrystalDensity = fileCount > 0 ? (totalCrystalDensity / fileCount).toFixed(2) : 0;
-    const averageOreDensity = fileCount > 0 ? (totalOreDensity / fileCount).toFixed(2) : 0;
-    const averageOreToCrystalRatio = fileCount > 0 ? (totalOreToCrystalRatio / fileCount).toFixed(2) : 0;
-    const averageVehicles = fileCount > 0 ? (totalVehicles / fileCount).toFixed(2) : 0;
-    const averageCreatures = fileCount > 0 ? (totalCreatures / fileCount).toFixed(2) : 0;
-    const averageBuildings = fileCount > 0 ? (totalBuildings / fileCount).toFixed(2) : 0;
+    const AVERAGE_MAP_SIZE = fileCount > 0 ? (totalSize / fileCount).toFixed(2) : 0;
+    const AVERAGE_CRYSTAL_COUNT = fileCount > 0 ? (totalCrystals / fileCount).toFixed(2) : 0;
+    const AVERAGE_ORE_COUNT = fileCount > 0 ? (totalOre / fileCount).toFixed(2) : 0;
+    const AVERAGE_CRYSTAL_DENSITY = fileCount > 0 ? (totalCrystalDensity / fileCount).toFixed(2) : 0;
+    const AVERAGE_ORE_DENSITY = fileCount > 0 ? (totalOreDensity / fileCount).toFixed(2) : 0;
+    const AVERAGE_CRYSTAL_TO_ORE_RATIO = fileCount > 0 ? (totalOreToCrystalRatio / fileCount).toFixed(2) : 0;
+    const AVERAGE_VEHICLE_PER_MAP = fileCount > 0 ? (totalVehicles / fileCount).toFixed(2) : 0;
+    const AVERAGE_CREATURES_PER_MAP = fileCount > 0 ? (totalCreatures / fileCount).toFixed(2) : 0;
+    const AVERAGE_BUILDINGS_PER_MAP = fileCount > 0 ? (totalBuildings / fileCount).toFixed(2) : 0;
 
     const result = {
         processedFiles: fileCount,
         failedFiles: failedCount,
         directoriesChecked,
         directoriesWithDatFiles,
-        averageSize,
-        minSize,
-        maxSize,
-        averageCrystals,
-        minCrystals,
-        maxCrystals,
-        averageOre,
-        minOre,
-        maxOre,
-        averageCrystalDensity,
-        minCrystalDensity,
-        maxCrystalDensity,
-        averageOreDensity,
-        minOreDensity,
-        maxOreDensity,
-        averageOreToCrystalRatio,
-        averageVehicles,
-        averageCreatures,
-        averageBuildings,
+        AVERAGE_MAP_SIZE,
+        SMALLEST_MAP_SIZE: smallestSize,
+        LARGEST_MAP_SIZE: largestSize,
+        AVERAGE_CRYSTAL_COUNT,
+        SMALLEST_CRYSTAL_COUNT: smallestCrystals,
+        LARGEST_CRYSTAL_COUNT: largestCrystals,
+        AVERAGE_ORE_COUNT,
+        SMALLEST_ORE_COUNT: smallestOre,
+        LARGEST_ORE_COUNT: largestOre,
+        AVERAGE_CRYSTAL_DENSITY,
+        SMALLEST_CRYSTAL_DENSITY: smallestCrystalDensity,
+        LARGEST_CRYSTAL_DENSITY: largestCrystalDensity,
+        AVERAGE_ORE_DENSITY,
+        SMALLEST_ORE_DENSITY: smallestOreDensity,
+        LARGEST_ORE_DENSITY: largestOreDensity,
+        AVERAGE_CRYSTAL_TO_ORE_RATIO,
+        AVERAGE_VEHICLE_PER_MAP,
+        AVERAGE_CREATURES_PER_MAP,
+        AVERAGE_BUILDINGS_PER_MAP,
         failedFilesDetails: failedFiles,
         emptyDatDirectories,
     };
@@ -235,25 +235,32 @@ async function calculateMapSizeStats(baseDir: string): Promise<any> {
         console.log('Directories without .dat files:');
         emptyDatDirectories.forEach(dir => console.log(dir));
     }
-    console.log(`Average map size: ${averageSize}`);
-    console.log(`Minimum map size: ${minSize}`);
-    console.log(`Maximum map size: ${maxSize}`);
-    console.log(`Average crystals: ${averageCrystals}`);
-    console.log(`Minimum crystals: ${minCrystals}`);
-    console.log(`Maximum crystals: ${maxCrystals}`);
-    console.log(`Average ore: ${averageOre}`);
-    console.log(`Minimum ore: ${minOre}`);
-    console.log(`Maximum ore: ${maxOre}`);
-    console.log(`Average crystal density: ${averageCrystalDensity}%`);
-    console.log(`Minimum crystal density: ${minCrystalDensity}%`);
-    console.log(`Maximum crystal density: ${maxCrystalDensity}%`);
-    console.log(`Average ore density: ${averageOreDensity}%`);
-    console.log(`Minimum ore density: ${minOreDensity}%`);
-    console.log(`Maximum ore density: ${maxOreDensity}%`);
-    console.log(`Average ore to crystal ratio: ${averageOreToCrystalRatio} (ore/crystals)`);
-    console.log(`Average vehicles per map: ${averageVehicles}`);
-    console.log(`Average creatures per map: ${averageCreatures}`);
-    console.log(`Average buildings per map: ${averageBuildings}`);
+    console.log('Map Size:');
+    console.log('  Average:', AVERAGE_MAP_SIZE);
+    console.log('  Smallest:', smallestSize);
+    console.log('  Largest:', largestSize);
+    console.log('Crystals:');
+    console.log('  Average count:', AVERAGE_CRYSTAL_COUNT);
+    console.log('  Smallest count:', smallestCrystals);
+    console.log('  Largest count:', largestCrystals);
+    console.log('  Average density:', AVERAGE_CRYSTAL_DENSITY, '%');
+    console.log('  Smallest density:', smallestCrystalDensity, '%');
+    console.log('  Largest density:', largestCrystalDensity, '%');
+    console.log('Ore:');
+    console.log('  Average count:', AVERAGE_ORE_COUNT);
+    console.log('  Smallest count:', smallestOre);
+    console.log('  Largest count:', largestOre);
+    console.log('  Average density:', AVERAGE_ORE_DENSITY, '%');
+    console.log('  Smallest density:', smallestOreDensity, '%');
+    console.log('  Largest density:', largestOreDensity, '%');
+    console.log('Ore to Crystal Ratio:');
+    console.log('  Average:', AVERAGE_CRYSTAL_TO_ORE_RATIO);
+    console.log('Vehicles:');
+    console.log('  Average per map:', AVERAGE_VEHICLE_PER_MAP);
+    console.log('Creatures:');
+    console.log('  Average per map:', AVERAGE_CREATURES_PER_MAP);
+    console.log('Buildings:');
+    console.log('  Average per map:', AVERAGE_BUILDINGS_PER_MAP);
     console.log('======================================================');
 
     return result;
@@ -262,8 +269,7 @@ async function calculateMapSizeStats(baseDir: string): Promise<any> {
 async function init() {
     try {
         const directoryPath: any = process.env.MMT_CATALOG_DIR;
-        const processingResults = await calculateMapSizeStats(directoryPath);
-        console.log(processingResults);
+        return await calculateMapSizeStats(directoryPath);
     } catch (err) {
         console.error('[ERROR] Error initializing map size stats calculation:', err);
     }
