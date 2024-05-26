@@ -37,6 +37,8 @@ async function calculateMapSizeStats(baseDir: string): Promise<any> {
 
     let totalOreToCrystalRatio = 0;
 
+    let totalVehicles = 0;
+
     async function traverseDirectory(directory: string): Promise<boolean> {
         directoriesChecked++;
         let datFileFound = false;
@@ -58,6 +60,7 @@ async function calculateMapSizeStats(baseDir: string): Promise<any> {
                         const data = await fs.readFile(fullPath, 'utf8');
                         const size = parseMapSize(data);
                         const resourceStats = parseResourceStats(data);
+                        const vehicleStats = parseVehicleStats(data);
 
                         if (size !== null) {
                             totalSize += size;
@@ -83,6 +86,8 @@ async function calculateMapSizeStats(baseDir: string): Promise<any> {
                                 const oreToCrystalRatio = resourceStats.ore.count / resourceStats.crystals.count;
                                 totalOreToCrystalRatio += oreToCrystalRatio;
                             }
+
+                            totalVehicles += vehicleStats.count;
                         } else {
                             failedCount++;
                             failedFiles.push(fullPath);
@@ -152,6 +157,13 @@ async function calculateMapSizeStats(baseDir: string): Promise<any> {
         return resourceArray;
     }
 
+    function parseVehicleStats(fileContent: string): any {
+        const vehicleArray = fileContent.match(/Vehicle[a-zA-Z]+_C/g) || [];
+        return {
+            count: vehicleArray.length,
+        };
+    }
+
     const isEmpty = await traverseDirectory(baseDir);
     if (isEmpty) {
         emptyDatDirectories.push(baseDir);
@@ -163,6 +175,7 @@ async function calculateMapSizeStats(baseDir: string): Promise<any> {
     const averageCrystalDensity = fileCount > 0 ? (totalCrystalDensity / fileCount).toFixed(2) : 0;
     const averageOreDensity = fileCount > 0 ? (totalOreDensity / fileCount).toFixed(2) : 0;
     const averageOreToCrystalRatio = fileCount > 0 ? (totalOreToCrystalRatio / fileCount).toFixed(2) : 0;
+    const averageVehicles = fileCount > 0 ? (totalVehicles / fileCount).toFixed(2) : 0;
 
     const result = {
         processedFiles: fileCount,
@@ -185,6 +198,7 @@ async function calculateMapSizeStats(baseDir: string): Promise<any> {
         minOreDensity,
         maxOreDensity,
         averageOreToCrystalRatio,
+        averageVehicles,
         failedFilesDetails: failedFiles,
         emptyDatDirectories,
     };
@@ -218,6 +232,7 @@ async function calculateMapSizeStats(baseDir: string): Promise<any> {
     console.log(`Minimum ore density: ${minOreDensity}%`);
     console.log(`Maximum ore density: ${maxOreDensity}%`);
     console.log(`Average ore to crystal ratio: ${averageOreToCrystalRatio} (ore/crystals)`);
+    console.log(`Average vehicles per map: ${averageVehicles}`);
     console.log('======================================================');
 
     return result;
