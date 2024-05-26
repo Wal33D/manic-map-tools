@@ -35,6 +35,8 @@ async function calculateMapSizeStats(baseDir: string): Promise<any> {
     let minOreDensity = Infinity;
     let maxOreDensity = -Infinity;
 
+    let totalOreToCrystalRatio = 0;
+
     async function traverseDirectory(directory: string): Promise<boolean> {
         directoriesChecked++;
         let datFileFound = false;
@@ -76,6 +78,11 @@ async function calculateMapSizeStats(baseDir: string): Promise<any> {
                             if (resourceStats.crystals.density > maxCrystalDensity) maxCrystalDensity = resourceStats.crystals.density;
                             if (resourceStats.ore.density < minOreDensity) minOreDensity = resourceStats.ore.density;
                             if (resourceStats.ore.density > maxOreDensity) maxOreDensity = resourceStats.ore.density;
+
+                            if (resourceStats.crystals.count > 0) {
+                                const oreToCrystalRatio = resourceStats.ore.count / resourceStats.crystals.count;
+                                totalOreToCrystalRatio += oreToCrystalRatio;
+                            }
                         } else {
                             failedCount++;
                             failedFiles.push(fullPath);
@@ -155,6 +162,7 @@ async function calculateMapSizeStats(baseDir: string): Promise<any> {
     const averageOre = fileCount > 0 ? (totalOre / fileCount).toFixed(2) : 0;
     const averageCrystalDensity = fileCount > 0 ? (totalCrystalDensity / fileCount).toFixed(2) : 0;
     const averageOreDensity = fileCount > 0 ? (totalOreDensity / fileCount).toFixed(2) : 0;
+    const averageOreToCrystalRatio = fileCount > 0 ? (totalOreToCrystalRatio / fileCount).toFixed(2) : 0;
 
     const result = {
         processedFiles: fileCount,
@@ -176,6 +184,7 @@ async function calculateMapSizeStats(baseDir: string): Promise<any> {
         averageOreDensity,
         minOreDensity,
         maxOreDensity,
+        averageOreToCrystalRatio,
         failedFilesDetails: failedFiles,
         emptyDatDirectories,
     };
@@ -208,6 +217,7 @@ async function calculateMapSizeStats(baseDir: string): Promise<any> {
     console.log(`Average ore density: ${averageOreDensity}%`);
     console.log(`Minimum ore density: ${minOreDensity}%`);
     console.log(`Maximum ore density: ${maxOreDensity}%`);
+    console.log(`Average ore to crystal ratio: ${averageOreToCrystalRatio} (ore/crystals)`);
     console.log('======================================================');
 
     return result;
@@ -216,16 +226,8 @@ async function calculateMapSizeStats(baseDir: string): Promise<any> {
 async function init() {
     try {
         const directoryPath: any = process.env.MMT_CATALOG_DIR;
-
-        rl.question(`The directory to be processed is: ${directoryPath}. Would you like to proceed? (yes/no): \n`, async answer => {
-            if (answer.toLowerCase() === 'yes') {
-                const processingResults = await calculateMapSizeStats(directoryPath);
-                console.log(processingResults);
-            } else {
-                console.log('[INFO] Process aborted by user.');
-            }
-            rl.close();
-        });
+        const processingResults = await calculateMapSizeStats(directoryPath);
+        console.log(processingResults);
     } catch (err) {
         console.error('[ERROR] Error initializing map size stats calculation:', err);
     }
