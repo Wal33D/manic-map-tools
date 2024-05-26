@@ -1,14 +1,8 @@
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import * as dotenv from 'dotenv';
-import * as readline from 'readline';
 
 dotenv.config({ path: '.env.local' });
-
-const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout,
-});
 
 async function calculateMapSizeStats(baseDir: string): Promise<any> {
     let totalSize = 0;
@@ -38,6 +32,8 @@ async function calculateMapSizeStats(baseDir: string): Promise<any> {
     let totalOreToCrystalRatio = 0;
 
     let totalVehicles = 0;
+    let totalCreatures = 0;
+    let totalBuildings = 0;
 
     async function traverseDirectory(directory: string): Promise<boolean> {
         directoriesChecked++;
@@ -61,6 +57,8 @@ async function calculateMapSizeStats(baseDir: string): Promise<any> {
                         const size = parseMapSize(data);
                         const resourceStats = parseResourceStats(data);
                         const vehicleStats = parseVehicleStats(data);
+                        const creatureStats = parseCreatureStats(data);
+                        const buildingStats = parseBuildingStats(data);
 
                         if (size !== null) {
                             totalSize += size;
@@ -88,6 +86,8 @@ async function calculateMapSizeStats(baseDir: string): Promise<any> {
                             }
 
                             totalVehicles += vehicleStats.count;
+                            totalCreatures += creatureStats.count;
+                            totalBuildings += buildingStats.count;
                         } else {
                             failedCount++;
                             failedFiles.push(fullPath);
@@ -111,8 +111,8 @@ async function calculateMapSizeStats(baseDir: string): Promise<any> {
     }
 
     function parseMapSize(fileContent: string): number | null {
-        const rowMatch = fileContent.match(/rowcount:\s*(\d+)/);
-        const colMatch = fileContent.match(/colcount:\s*(\d+)/);
+        const rowMatch = fileContent.toLowerCase().match(/rowcount:\s*(\d+)/);
+        const colMatch = fileContent.toLowerCase().match(/colcount:\s*(\d+)/);
         if (rowMatch && colMatch) {
             return parseInt(rowMatch[1], 10) * parseInt(colMatch[1], 10);
         }
@@ -125,8 +125,9 @@ async function calculateMapSizeStats(baseDir: string): Promise<any> {
         const totalCrystals = crystalsArray.flat().reduce((sum, val) => sum + val, 0);
         const totalOre = oreArray.flat().reduce((sum, val) => sum + val, 0);
         const area = crystalsArray.length * (crystalsArray[0]?.length || 0);
-        const crystalDensity = (totalCrystals / area) * 100;
-        const oreDensity = (totalOre / area) * 100;
+
+        const crystalDensity = area > 0 ? (totalCrystals / area) * 100 : 0;
+        const oreDensity = area > 0 ? (totalOre / area) * 100 : 0;
 
         return {
             crystals: {
@@ -164,6 +165,20 @@ async function calculateMapSizeStats(baseDir: string): Promise<any> {
         };
     }
 
+    function parseCreatureStats(fileContent: string): any {
+        const creatureArray = fileContent.match(/Creature[a-zA-Z]+_C/g) || [];
+        return {
+            count: creatureArray.length,
+        };
+    }
+
+    function parseBuildingStats(fileContent: string): any {
+        const buildingArray = fileContent.match(/Building[a-zA-Z]+_C/g) || [];
+        return {
+            count: buildingArray.length,
+        };
+    }
+
     const isEmpty = await traverseDirectory(baseDir);
     if (isEmpty) {
         emptyDatDirectories.push(baseDir);
@@ -176,6 +191,8 @@ async function calculateMapSizeStats(baseDir: string): Promise<any> {
     const averageOreDensity = fileCount > 0 ? (totalOreDensity / fileCount).toFixed(2) : 0;
     const averageOreToCrystalRatio = fileCount > 0 ? (totalOreToCrystalRatio / fileCount).toFixed(2) : 0;
     const averageVehicles = fileCount > 0 ? (totalVehicles / fileCount).toFixed(2) : 0;
+    const averageCreatures = fileCount > 0 ? (totalCreatures / fileCount).toFixed(2) : 0;
+    const averageBuildings = fileCount > 0 ? (totalBuildings / fileCount).toFixed(2) : 0;
 
     const result = {
         processedFiles: fileCount,
@@ -199,6 +216,8 @@ async function calculateMapSizeStats(baseDir: string): Promise<any> {
         maxOreDensity,
         averageOreToCrystalRatio,
         averageVehicles,
+        averageCreatures,
+        averageBuildings,
         failedFilesDetails: failedFiles,
         emptyDatDirectories,
     };
@@ -233,6 +252,8 @@ async function calculateMapSizeStats(baseDir: string): Promise<any> {
     console.log(`Maximum ore density: ${maxOreDensity}%`);
     console.log(`Average ore to crystal ratio: ${averageOreToCrystalRatio} (ore/crystals)`);
     console.log(`Average vehicles per map: ${averageVehicles}`);
+    console.log(`Average creatures per map: ${averageCreatures}`);
+    console.log(`Average buildings per map: ${averageBuildings}`);
     console.log('======================================================');
 
     return result;
